@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Resumen del Cliente</title>
+  <link rel="stylesheet" href="{% static 'estilo.css' %}">
+  <link rel="stylesheet" href="{% static 'resumen.css' %}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="resumen" id="resumen" style="background: white; padding: 20px;">
+  <p class="h1es">Resumen del Evento</p>
+  
+  <!-- ✅ Datos del Cliente -->
+  <h2>{{ cliente.nombre }}</h2>
+  <p>{{ cliente.dni }}</p>
+  <p>{{ cliente.fecha_evento|date:"j/n/Y" }} - {{ cliente.salon }}</p>
+  
+  <h3>📞 Teléfonos de Contacto</h3>
+  {% if telefono %}
+    <p>
+      {% if telefono.numero1 %}Teléfono 1: {{ telefono.numero1 }}{% endif %}
+      {% if telefono.numero2 %}<br>Teléfono 2: {{ telefono.numero2 }}{% endif %}
+    </p>
+  {% else %}
+    <p>No se registraron teléfonos</p>
+  {% endif %}
+  
+  <h3>🧑‍🤝‍🧑 Cantidad de Personas</h3>
+  <p>
+    {% if cantidad_personas %}
+      {{ cantidad_personas }} personas
+    {% else %}
+      No se indicó la cantidad
+    {% endif %}
+  </p>
+  
+  <hr>
+  
+  <!-- ✅ Comida y Bebida -->
+   <h3>🥂 Recepción</h3>
+  <ul>{% for item in recepcion_items %}<li>{{ item.item }}</li>{% empty %}<li>No hay recepción</li>{% endfor %}</ul>
+  
+   <h3>🍸 Barra de Tragos</h3>
+  <p>
+    {% if barra_tragos %}
+      {{ barra_tragos }}
+    {% else %}
+      No se eligió barra de tragos
+    {% endif %}
+  </p>
+
+  <h3>🍽️ Platos</h3>
+  {% if elegir_platos %}
+  <p>Plato Principal: {{ elegir_platos.plato_principal }}</p>
+  <p>Plato Infantil: {{ elegir_platos.plato_infantil }}</p>
+  <p>Aclaraciones: {{ elegir_platos.aclaraciones_alimentarias }}</p>
+  <p>Adultos: {{ elegir_platos.num_adultos }}</p>
+  <p>Niños: {{ elegir_platos.num_ninos }}</p>
+{% else %}
+  <p>No se eligieron platos aún.</p>
+{% endif %}
+
+ 
+  
+  <h3>🍕 Islas Seleccionadas</h3>
+  <ul>{% for isla in islas %}<li>{{ isla.nombre }}</li>{% empty %}<li>No hay islas seleccionadas</li>{% endfor %}</ul>
+  
+  <h3>🍽️ Islas Premium</h3>
+  <ul>{% for isla in islas_premium %}<li>{{ isla.nombre }}</li>{% empty %}<li>No hay islas premium</li>{% endfor %}</ul>
+  
+  <h3>🍰 Postres</h3>
+  <ul>{% for postre in postres %}<li>{{ postre.nombre }}</li>{% empty %}<li>No hay postres</li>{% endfor %}</ul>
+  
+  <h3>🍭 Mesa Dulce Premium</h3>
+  <ul>{% for item in mesa_dulce %}<li>{{ item.nombre }}</li>{% empty %}<li>No hay mesa dulce premium</li>{% endfor %}</ul>
+  
+  
+  
+  <h3>🌅 Fin de Fiesta</h3>
+  <p>{% if fin_de_fiesta %}{{ fin_de_fiesta.nombre }}{% else %}No se eligió aún{% endif %}</p>
+  
+  <hr>
+  
+  <!-- ✅ Extras y Entretenimiento -->
+  <h3>🎁 Extras</h3>
+  <ul>{% for extra in extras %}<li>{{ extra.nombre }}</li>{% empty %}<li>No hay extras</li>{% endfor %}</ul>
+  
+  <h3>🎤 Shows</h3>
+  <ul>{% for show in shows %}<li>{{ show.nombre }}</li>{% empty %}<li>No hay shows</li>{% endfor %}</ul>
+</div>
+
+<div style="text-align: center; margin-top: 20px;">
+  <button onclick="descargarPDF()">📄 Descargar Resumen en PDF</button>
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+  <a href="{% url 'inicio' %}"><button type="button">Volver al inicio</button></a>
+</div>
+
+<script>
+function descargarPDF() {
+    const elemento = document.getElementById('resumen');
+    let nombreCliente = "{{ cliente.nombre|escapejs }}";
+    
+    nombreCliente = nombreCliente
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "_")
+      .replace(/[^\w\-]/g, "");
+    
+    const opciones = {
+      margin: 0.5,
+      filename: `resumen_evento_${nombreCliente}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    
+    window.scrollTo(0, 0);
+    setTimeout(() => { html2pdf().set(opciones).from(elemento).save(); }, 200);
+}
+</script>
+
+</body>
+</html>

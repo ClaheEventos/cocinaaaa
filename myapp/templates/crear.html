@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crear Cliente</title>
+        <link rel="stylesheet" href="{% static 'estilo.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+      <link rel="stylesheet" href="{% static 'especial.css' %}">
+
+
+</head>
+<body>
+    
+    <h1>Crear  cliente</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: red;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label for="dni">DNI:</label><br>
+        <input type="text" name="dni" id="dni" value="{{ dni }}"><br><br>
+
+        <label for="nombre">Nombre:</label><br>
+        <input type="text" name="nombre" id="nombre" value="{{ nombre }}"><br><br>
+
+        <label for="fecha_evento">Fecha del Evento:</label><br>
+        <input type="date" name="fecha_evento" id="fecha_evento" value="{{ fecha_evento }}"><br><br>
+
+     <label for="salon">Salón:</label><br>
+<select name="salon" id="salon" required>
+  <option value="">--Seleccioná un salón--</option>
+  {% for s in salon %}
+    <option value="{{ s }}" {% if s == salon_seleccionado %}selected{% endif %}>{{ s }}</option>
+  {% endfor %}
+</select><br><br>
+
+        <button type="submit">Guardar y continuar</button>
+    </form>
+
+    <br>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+<a href="{% url 'inicio' %}">
+  <button type="button">Volver al inicio</button>
+</a>
+</div>
+</body>
+</html>

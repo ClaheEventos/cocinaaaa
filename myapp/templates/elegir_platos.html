@@ -1,0 +1,153 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plato</title>
+    <link rel="stylesheet" href="{% static 'estilo.css' %}">
+    <link rel="stylesheet" href="{% static 'navbar.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<style>
+.opciones-principal,
+.opciones-infantil {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease; /* <--- animación suave */
+}
+.opciones-principal.active,
+.opciones-infantil.active {
+    overflow: hidden;
+}
+</style>
+<body>
+    
+
+    <nav class="navbar">
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div class="nav-links" id="navLinks">
+   <a href="{% url 'agregar_telefonos' cliente_id=cliente.id %}">Teléfonos</a>
+    <a href="{% url 'elegir_cantidades' cliente_id=cliente.id %}">Cantidades</a>
+    <a href="{% url 'elegir_islas' cliente_id=cliente.id %}">Islas</a>
+    <a href="{% url 'elegir_islas_premium' cliente_id=cliente.id %}">Islas Premium</a>
+    <a href="{% url 'elegir_barra_tragos' cliente_id=cliente.id %}">Barra de Tragos</a>
+    <a href="{% url 'elegir_platos' cliente_id=cliente.id %}">Platos</a>
+    <a href="{% url 'elegir_postres' cliente_id=cliente.id %}">Postres</a>
+    <a href="{% url 'elegir_mesa_dulce_premium' cliente_id=cliente.id %}">Mesa Dulce Premium</a>
+    <a href="{% url 'elegir_extras' cliente_id=cliente.id %}">Extras</a>
+    <a href="{% url 'elegir_shows' cliente_id=cliente.id %}">Shows</a>
+    <a href="{% url 'elegir_recepcion' cliente_id=cliente.id %}">Recepción</a>
+    <a href="{% url 'elegir_fin_de_fiesta' cliente_id=cliente.id %}">Fin de Fiesta</a>
+    </div>
+</nav>
+<form method="post">
+  {% csrf_token %}
+
+<h3>Plato Principal (elige 1)</h3>
+{% for plato in platos_principales %}
+  <div style="border: 2px solid #ffd700; border-radius:8px; padding:10px; margin-bottom:15px;">
+    <label>
+      <input type="radio" name="plato_principal" value="{{ plato.nombre }}" class="plato-radio"
+        data-opciones="opciones_principal_{{ forloop.counter }}"
+        {% if plato.nombre == elegido_principal %}checked{% endif %} required>
+      {{ plato.nombre }}
+    </label>
+
+    {% if plato.opciones %}
+      <div id="opciones_principal_{{ forloop.counter }}" class="opciones-principal" style="margin-left:20px;">
+        {% for key, valores in plato.opciones.items %}
+          <label>{{ key|capfirst }}:</label>
+          <select name="op_{{ key }}">
+            {% for val in valores %}
+              <option value="{{ val }}" {% if opciones_principal.key == val %}selected{% endif %}>{{ val }}</option>
+            {% endfor %}
+          </select><br>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<h3>Plato Infantil (elige 1, opcional)</h3>
+{% for plato in platos_infantiles %}
+  <div style="border: 2px solid #ffd700; border-radius:8px; padding:10px; margin-bottom:15px;">
+    <label>
+      <input type="radio" name="plato_infantil" value="{{ plato.nombre }}" class="plato-infantil-radio"
+        data-opciones="opciones_infantil_{{ forloop.counter }}"
+        {% if plato.nombre == elegido_infantil %}checked{% endif %}>
+      {{ plato.nombre }}
+    </label>
+
+    {% if plato.opciones %}
+      <div id="opciones_infantil_{{ forloop.counter }}" class="opciones-infantil" style="margin-left:20px;">
+        {% for key, valores in plato.opciones.items %}
+          <label>{{ key|capfirst }}:</label>
+          <select name="op_inf_{{ key }}">
+            {% for val in valores %}
+              <option value="{{ val }}" {% if opciones_infantil.key == val %}selected{% endif %}>{{ val }}</option>
+            {% endfor %}
+          </select><br>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<h3>Aclaraciones alimentarias</h3>
+<textarea name="aclaraciones" rows="4" cols="50">{{ aclaraciones }}</textarea>
+
+<h3>Cantidades</h3>
+<label for="num_adultos">Cantidad de Adultos:</label>
+<input type="number" name="num_adultos" min="0" value="{{ num_adultos }}"><br><br>
+
+<label for="num_ninos">Cantidad de Niños:</label>
+<input type="number" name="num_ninos" min="0" value="{{ num_ninos }}"><br><br>
+
+<button type="submit">Guardar</button>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function setupRadios(radiosClass, opcionesClass) {
+        const radios = document.querySelectorAll('.' + radiosClass);
+
+        radios.forEach(radio => {
+            const div = document.getElementById(radio.dataset.opciones);
+            if (!div) return;
+
+            function openDiv() {
+                div.classList.add('active');
+                div.style.maxHeight = div.scrollHeight + 'px';
+            }
+            function closeDiv() {
+                div.classList.remove('active');
+                div.style.maxHeight = '0';
+            }
+
+            radio.addEventListener('change', function() {
+                // Cerrar todas
+                document.querySelectorAll('.' + opcionesClass).forEach(d => {
+                    d.classList.remove('active');
+                    d.style.maxHeight = '0';
+                });
+                // Abrir la seleccionada
+                openDiv();
+            });
+
+            // Abrir si ya estaba seleccionado
+            if (radio.checked) {
+                openDiv();
+            }
+        });
+    }
+
+    setupRadios('plato-radio', 'opciones-principal');
+    setupRadios('plato-infantil-radio', 'opciones-infantil');
+});
+
+function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('show');
+}
+</script>
+</body>
+</html>

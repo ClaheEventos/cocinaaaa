@@ -1,0 +1,82 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Inicio</title>
+    <link rel="stylesheet" href="{% static 'estilo.css' %}">
+    <link rel="stylesheet" href="{% static 'especial.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<h1>Inicio</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    
+    <label for="tipo_busqueda">Buscar por:</label>
+    <select name="tipo_busqueda" id="tipo_busqueda" onchange="actualizarPlaceholder()" required>
+        <option value="dni">DNI</option>
+        <option value="telefono1">Teléfono 1</option>
+        <option value="telefono2">Teléfono 2</option>
+    </select>
+    <br><br>
+
+    <label for="valor_busqueda" id="label_busqueda">Ingrese valor:</label>
+    <input type="text" 
+           name="valor_busqueda" 
+           id="valor_busqueda"
+           placeholder="Ingrese DNI" 
+           required>
+    <br><br>
+
+    <button type="submit" name="buscar">Buscar</button>
+</form>
+
+{% if mensaje %}
+<div style="text-align: center; margin-top: 20px;">
+    <p style="color: red;">{{ mensaje }}</p>
+</div>
+{% endif %}
+
+{% if mostrar_botones %}
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+    <a href="{% url 'crear_cliente' %}">
+        <button type="button">Crear nuevo cliente</button>
+    </a>
+
+    <a href="{% url 'seleccionar_cliente_para_editar' %}">
+        <button type="button">Editar cliente existente</button>
+    </a>
+</div>
+{% endif %}
+
+<script>
+function actualizarPlaceholder() {
+    const tipo = document.getElementById('tipo_busqueda').value;
+    const input = document.getElementById('valor_busqueda');
+    const label = document.getElementById('label_busqueda');
+    
+    switch(tipo) {
+        case 'dni':
+            label.textContent = 'Ingrese DNI:';
+            input.placeholder = 'Ingrese DNI';
+            break;
+        case 'telefono1':
+            label.textContent = 'Ingrese Teléfono 1:';
+            input.placeholder = 'Ingrese el número de teléfono 1';
+            break;
+        case 'telefono2':
+            label.textContent = 'Ingrese Teléfono 2:';
+            input.placeholder = 'Ingrese el número de teléfono 2';
+            break;
+    }
+    
+    // Limpiar el campo cuando se cambia el tipo
+    input.value = '';
+}
+</script>
+
+</body>
+</html>
