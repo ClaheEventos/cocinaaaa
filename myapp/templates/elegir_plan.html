@@ -1,12 +1,12 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cantidades para {{ cliente.nombre }}</title>
+    <title>Elegir Plan</title>
     <link rel="stylesheet" href="{% static 'estilo.css' %}">
-          <link rel="stylesheet" href="{% static 'navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'navbar.css' %}">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -15,7 +15,8 @@
     <div class="nav-links" id="navLinks">
         <a href="{% url 'agregar_telefonos' cliente_id=cliente.id %}">Teléfonos</a>
         <a href="{% url 'elegir_plan' cliente_id=cliente.id %}">Plan</a>
-        <a href="{% url 'elegir_bebidas' cliente_id=cliente.id %}">Bebidas</a>        <a href="{% url 'elegir_islas' cliente_id=cliente.id %}">Islas</a>
+        <a href="{% url 'elegir_bebidas' cliente_id=cliente.id %}">Bebidas</a>
+        <a href="{% url 'elegir_islas' cliente_id=cliente.id %}">Islas</a>
         <a href="{% url 'elegir_islas_premium' cliente_id=cliente.id %}">Islas Premium</a>
         <a href="{% url 'elegir_barra_tragos' cliente_id=cliente.id %}">Barra de Tragos</a>
         <a href="{% url 'elegir_platos' cliente_id=cliente.id %}">Platos</a>
@@ -27,19 +28,25 @@
         <a href="{% url 'elegir_fin_de_fiesta' cliente_id=cliente.id %}">Fin de Fiesta</a>
     </div>
 </nav>
-    <form method="post">
-        {% csrf_token %}
-        <div>
-            <label for="cantidad">Cantidad de personas:</label>
-            <input type="number" id="cantidad" name="cantidad"
-                   value="{{ cantidad_actual }}" min="0" required>
-        </div>
-        <button type="submit">Guardar y continuar</button>
-    </form>
+
+<h1>Elegir Plan </h1>
+
+<form method="POST">
+    {% csrf_token %}
+
+    {% for plan in planes_posibles %}
+        <label>
+            <input type="radio" name="plan" value="{{ plan }}"
+                {% if plan == plan_elegido %} checked {% endif %}>
+            {{ plan }}
+        </label><br>
+    {% endfor %}
+
+    <button type="submit">Guardar Plan</button>
+</form>
 <script>
     function toggleMenu() {
         document.getElementById('navLinks').classList.toggle('show');
     }
 </script>
 </body>
-</html>

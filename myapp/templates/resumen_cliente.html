@@ -14,9 +14,16 @@
   <p class="h1es">Resumen del Evento</p>
   
   <!-- ✅ Datos del Cliente -->
-  <h2>{{ cliente.nombre }}</h2>
-  <p>{{ cliente.dni }}</p>
-  <p>{{ cliente.fecha_evento|date:"j/n/Y" }} - {{ cliente.salon }}</p>
+  <h2>📋 Datos del Cliente</h2>
+<ul>
+  <li><strong>Nombre:</strong> {{ cliente.nombre }}</li>
+  <li><strong>DNI:</strong> {{ cliente.dni }}</li>
+  <li><strong>Tipo de evento:</strong> {{ cliente.tipo_evento }}</li>
+  <li><strong>Fecha:</strong> {{ cliente.fecha_evento }}</li>
+  <li><strong>Horario:</strong> {{ cliente.horario_evento }}</li>
+  <li><strong>Salón:</strong> {{ cliente.salon }}</li>
+</ul>
+
   
   <h3>📞 Teléfonos de Contacto</h3>
   {% if telefono %}
@@ -27,23 +34,36 @@
   {% else %}
     <p>No se registraron teléfonos</p>
   {% endif %}
-  
+
+  <h3>📝 Plan Seleccionado</h3>
+  <p>{% if plan %}{{ plan.nombre }}{% else %}No se seleccionó plan{% endif %}</p>
+
   <h3>🧑‍🤝‍🧑 Cantidad de Personas</h3>
   <p>
     {% if cantidad_personas %}
-      {{ cantidad_personas }} personas
+      {{ cantidad_personas }} personas ({{ num_adultos }} adultos, {{ num_ninos }} niños)
     {% else %}
       No se indicó la cantidad
     {% endif %}
   </p>
   
   <hr>
-  
+
   <!-- ✅ Comida y Bebida -->
-   <h3>🥂 Recepción</h3>
-  <ul>{% for item in recepcion_items %}<li>{{ item.item }}</li>{% empty %}<li>No hay recepción</li>{% endfor %}</ul>
+<h3>🥂 Recepción</h3>
+<ul>
+  {% for item in recepcion_items %}
+    <li>
+      {{ item.item }}
+      {% if item.observacion %} - Obs: {{ item.observacion }}{% endif %}
+    </li>
+  {% empty %}
+    <li>No hay recepción</li>
+  {% endfor %}
+</ul>
+
   
-   <h3>🍸 Barra de Tragos</h3>
+  <h3>🍸 Barra de Tragos</h3>
   <p>
     {% if barra_tragos %}
       {{ barra_tragos }}
@@ -52,19 +72,44 @@
     {% endif %}
   </p>
 
+  <h3>🥤 Bebidas</h3>
+  <ul>
+    {% for bebida in bebidas %}
+      <li>{{ bebida.nombre }}</li>
+    {% empty %}
+      <li>No se eligieron bebidas</li>
+    {% endfor %}
+  </ul>
+
+  <h3>🍷 Vinos</h3>
+  <ul>
+    {% for vino in vinos %}
+      <li>{{ vino.nombre }}{% if vino.observacion %} - {{ vino.observacion }}{% endif %}</li>
+    {% empty %}
+      <li>No se eligieron vinos</li>
+    {% endfor %}
+  </ul>
+
+  <h3>🍺 Choperas</h3>
+  <ul>
+    {% for chop in choperas %}
+      <li>{{ chop.sabor }}{% if chop.variante %} - {{ chop.variante }}{% endif %}{% if chop.observacion %} - {{ chop.observacion }}{% endif %}</li>
+    {% empty %}
+      <li>No se eligieron choperas</li>
+    {% endfor %}
+  </ul>
+
   <h3>🍽️ Platos</h3>
   {% if elegir_platos %}
-  <p>Plato Principal: {{ elegir_platos.plato_principal }}</p>
-  <p>Plato Infantil: {{ elegir_platos.plato_infantil }}</p>
-  <p>Aclaraciones: {{ elegir_platos.aclaraciones_alimentarias }}</p>
-  <p>Adultos: {{ elegir_platos.num_adultos }}</p>
-  <p>Niños: {{ elegir_platos.num_ninos }}</p>
-{% else %}
-  <p>No se eligieron platos aún.</p>
-{% endif %}
+    <p>Plato Principal: {{ elegir_platos.plato_principal }}</p>
+    <p>Plato Infantil: {{ elegir_platos.plato_infantil }}</p>
+    <p>Aclaraciones: {{ elegir_platos.aclaraciones_alimentarias }}</p>
+    <p>Adultos: {{ elegir_platos.num_adultos }}</p>
+    <p>Niños: {{ elegir_platos.num_ninos }}</p>
+  {% else %}
+    <p>No se eligieron platos aún.</p>
+  {% endif %}
 
- 
-  
   <h3>🍕 Islas Seleccionadas</h3>
   <ul>{% for isla in islas %}<li>{{ isla.nombre }}</li>{% empty %}<li>No hay islas seleccionadas</li>{% endfor %}</ul>
   
@@ -77,8 +122,6 @@
   <h3>🍭 Mesa Dulce Premium</h3>
   <ul>{% for item in mesa_dulce %}<li>{{ item.nombre }}</li>{% empty %}<li>No hay mesa dulce premium</li>{% endfor %}</ul>
   
-  
-  
   <h3>🌅 Fin de Fiesta</h3>
   <p>{% if fin_de_fiesta %}{{ fin_de_fiesta.nombre }}{% else %}No se eligió aún{% endif %}</p>
   
@@ -90,7 +133,24 @@
   
   <h3>🎤 Shows</h3>
   <ul>{% for show in shows %}<li>{{ show.nombre }}</li>{% empty %}<li>No hay shows</li>{% endfor %}</ul>
-</div>
+</div>{% if mostrar_botones %}
+  <a href="{% url 'editar_cliente' cliente_id=cliente.id %}">
+    <button type="button" style="
+      background: linear-gradient(135deg, #ffd700, #ffa500);
+      color: #000;
+      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      ✏️ Editar Cliente
+    </button>
+  </a>
+{% endif %}
 
 <div style="text-align: center; margin-top: 20px;">
   <button onclick="descargarPDF()">📄 Descargar Resumen en PDF</button>

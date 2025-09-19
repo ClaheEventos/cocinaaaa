@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .models import Cliente, Isla,IslaPremium, PlatoPrincipal, PlatoInfantil, EleccionPlatos, Postre, MesaDulcePremium, Extra, Show, EleccionFinDeFiesta,Cantidades, EleccionRecepcion,Telefono, BarraTragos
 from .forms import ClienteForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from .models import Cliente, Isla,IslaPremium, Postre, MesaDulcePremium, Extra, Show, EleccionFinDeFiesta,Cantidades, EleccionRecepcion,Telefono, BarraTragos
 
 # Create your views here.
 def login_view(request):
+    
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -54,21 +55,6 @@ def lista_clientes(request):
 # -------------------------------
 # CREAR CLIENTE
 # -------------------------------
-@login_required
-def crear_cliente(request):
-    mensaje = ""
-    if request.method == "POST":
-        nombre = request.POST.get("nombre")
-        dni = request.POST.get("dni")
-        # Puedes agregar más campos de Cliente si los tienes
-        if nombre and dni:
-            Cliente.objects.create(nombre=nombre, dni=dni)
-            mensaje = "Cliente creado correctamente"
-        else:
-            mensaje = "Complete todos los campos"
-
-    return render(request, "crear_cliente.html", {"mensaje": mensaje})
-
 
 # -------------------------------
 # EDITAR CLIENTE
@@ -92,40 +78,182 @@ def editar_cliente(request, cliente_id):
         "mensaje": mensaje
     })
 
+from .models import Cliente, Plan, EleccionBebidas, EleccionVinos, EleccionChoperas
+
+# ===== Planes =====
+PLANES_POSIBLES = ["Plan Plata", "Plan Oro Viejo", "ALL INCLUSIVE", "Plan Oro Nuevo"]
+
+@login_required
+def elegir_plan(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+
+    if request.method == 'POST':
+        plan_seleccionado = request.POST.get('plan')
+
+        # Borrar plan anterior
+        cliente.plan.all().delete()
+
+        # Guardar nuevo plan
+        Plan.objects.create(cliente=cliente, nombre=plan_seleccionado)
+
+        # Redirigir al siguiente paso (bebidas)
+        return redirect('elegir_bebidas', cliente_id=cliente.id)
+
+    # Obtener el plan previamente seleccionado
+    plan_elegido = cliente.plan.values_list('nombre', flat=True).first()  # solo uno
+
+    return render(request, 'elegir_plan.html', {
+        'cliente': cliente,
+        'planes_posibles': PLANES_POSIBLES,
+        'plan_elegido': plan_elegido,
+    })
+
+
+
+# ===== Bebidas / Vinos / Choperas =====
+BEBIDAS_POSIBLES = ["Primera Lineas", "Segunda Linea"]
+VINOS_POSIBLES = ["Primera Lineas", "Segunda Linea "]
+CHOPERAS_SABORES = ["Sin Chopera", "Chopera 30", "Chopera 40", "Chopera 50", "Otro"]
+
+@login_required
+def elegir_bebidas(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+
+    if request.method == 'POST':
+        # Bebidas
+        bebida_seleccionada = request.POST.get('bebidas')
+
+        # Vinos
+        vino_seleccionado = request.POST.get('vinos')
+        observacion_vinos = request.POST.get('observacion_vinos', '').strip()
+
+        # Choperas
+        chopera_seleccionada = request.POST.get('choperas')
+        otro_sabor = request.POST.get('otro_sabor', '').strip()
+        observacion_choperas = request.POST.get('observacion_choperas', '').strip()
+
+        # Limpiar elecciones anteriores
+        cliente.bebidas.all().delete()
+        cliente.vinos.all().delete()
+        cliente.choperas.all().delete()
+
+        # Guardar Bebida
+        if bebida_seleccionada:
+            EleccionBebidas.objects.create(cliente=cliente, nombre=bebida_seleccionada)
+
+        # Guardar Vino
+        if vino_seleccionado:
+            EleccionVinos.objects.create(
+                cliente=cliente,
+                nombre=vino_seleccionado,
+                observacion=observacion_vinos if observacion_vinos else None
+            )
+
+        # Guardar Chopera
+        if chopera_seleccionada:
+            sabor_final = chopera_seleccionada
+            if chopera_seleccionada.lower() == "otro" and otro_sabor:
+                sabor_final = otro_sabor
+
+            EleccionChoperas.objects.create(
+                cliente=cliente,
+                sabor=sabor_final,
+                observacion=observacion_choperas if observacion_choperas else None
+            )
+
+        return redirect('elegir_islas', cliente_id=cliente.id)
+
+    # Selecciones previas
+    bebida_prev = cliente.bebidas.first()
+    vino_prev = cliente.vinos.first()
+    chopera_prev = cliente.choperas.first()
+    otro_chopera_prev = None
+    if chopera_prev:
+        if chopera_prev.sabor not in CHOPERAS_SABORES:
+            otro_chopera_prev = chopera_prev.sabor
+
+    return render(request, 'elegir_bebidas.html', {
+        'cliente': cliente,
+        'bebidas_posibles': BEBIDAS_POSIBLES,
+        'vinos_posibles': VINOS_POSIBLES,
+        'choperas_posibles': CHOPERAS_SABORES,
+        'bebida_prev': bebida_prev.nombre if bebida_prev else None,
+        'vino_prev': vino_prev.nombre if vino_prev else None,
+        'observacion_vinos_prev': vino_prev.observacion if vino_prev else '',
+        'chopera_prev': chopera_prev.sabor if chopera_prev else None,
+        'otro_chopera_prev': otro_chopera_prev,
+        'observacion_chopera_prev': chopera_prev.observacion if chopera_prev else '',
+    })
+from datetime import datetime
+
+from datetime import datetime
+from .models import Cliente
 
 @login_required
 def crear_cliente(request):
     salon = [
-   "Varela", "Varela II", "Berazategui", "Monteverde", "París",
-    "Dream's", "Melody", "Luxor", "Bernal", "Sol Fest",
-    "Clahe", "Onix", "Auguri", "Dominico II", "Gala", "Sarandí II",
-    "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro", "Monte Grande",
+        "Varela", "Varela II", "Berazategui", "Monteverde", "París",
+        "Dream's", "Melody", "Luxor", "Bernal", "Sol Fest",
+        "Clahe", "Onix", "Auguri", "Dominico II", "Gala", "Sarandí II",
+        "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro", "Monte Grande",
     ]
 
     if request.method == 'POST':
         dni = request.POST.get('dni')
         nombre = request.POST.get('nombre')
-        fecha_evento = request.POST.get('fecha_evento')
+        fecha_evento_str = request.POST.get('fecha_evento')  # viene en formato YYYY-MM-DD
+        horario_evento_str = request.POST.get('horario')
+        tipo_evento = request.POST.get('tipo_evento')
         salon_seleccionado = request.POST.get('salon')
 
-        if Cliente.objects.filter(dni=dni).exists():
-            messages.error(request, 'Ya existe un cliente con ese DNI.')
+        # Convertir fecha a objeto date
+        try:
+            fecha_evento = datetime.strptime(fecha_evento_str, "%Y-%m-%d").date()
+        except ValueError:
+            messages.error(request, "Formato de fecha inválido. Usa AAAA-MM-DD.")
             return render(request, 'crear.html', {
                 'dni': dni,
                 'nombre': nombre,
-                'fecha_evento': fecha_evento,
+                'fecha_evento': fecha_evento_str,
+                'tipo_evento': tipo_evento,
+                'horario': horario_evento_str,
                 'salon': salon,
                 'salon_seleccionado': salon_seleccionado,
             })
 
-        cliente = Cliente(dni=dni, nombre=nombre, fecha_evento=fecha_evento, salon=salon_seleccionado)
+        # Convertir horario a objeto time
+        try:
+            horario_evento = datetime.strptime(horario_evento_str, "%H:%M").time()
+        except ValueError:
+            messages.error(request, "Formato de horario inválido. Usa HH:MM en 24h.")
+            return render(request, 'crear.html', {
+                'dni': dni,
+                'nombre': nombre,
+                'fecha_evento': fecha_evento_str,
+                'tipo_evento': tipo_evento,
+                'horario': horario_evento_str,
+                'salon': salon,
+                'salon_seleccionado': salon_seleccionado,
+            })
+
+       
+
+        # Guardar cliente
+        cliente = Cliente(
+            dni=dni,
+            nombre=nombre,
+            fecha_evento=fecha_evento,
+            horario_evento=horario_evento,
+            tipo_evento=tipo_evento,
+            salon=salon_seleccionado,
+        )
         cliente.save()
+
         return redirect('agregar_telefonos', cliente_id=cliente.id)
 
     return render(request, 'crear.html', {
         'salon': salon
     })
-
 @login_required
 def agregar_telefonos(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -136,7 +264,7 @@ def agregar_telefonos(request, cliente_id):
         telefono.numero1 = request.POST.get('numero1')
         telefono.numero2 = request.POST.get('numero2')
         telefono.save()
-        return redirect('elegir_cantidades', cliente_id=cliente.id)
+        return redirect('elegir_plan', cliente_id=cliente.id)
 
     return render(request, 'agregar_telefonos.html', {
         'cliente': cliente,
@@ -221,7 +349,7 @@ def elegir_cantidades(request, cliente_id):
         cliente.cantidades.all().delete()
         Cantidades.objects.create(cliente=cliente, cantidad=cantidad_valor)
 
-        return redirect('elegir_islas', cliente_id=cliente.id)
+        return redirect('elegir_plan', cliente_id=cliente.id)
 
     return render(request, 'elegir_cantidad.html', {
         'cliente': cliente,
@@ -284,26 +412,45 @@ def elegir_platos(request, cliente_id):
     eleccion, _ = Eleccion_Platos.objects.get_or_create(cliente=cliente)
 
     if request.method == 'POST':
-        # --- Platos ---
+        # --- Plato principal ---
         plato_principal = request.POST.get('plato_principal', '')
-        opciones_principal = [f"{key[3:]}: {request.POST[key]}" for key in request.POST if key.startswith('op_')]
+        opciones_principal = []
+
+        plato_def = next((p for p in PLATOS_PRINCIPALES if p["nombre"] == plato_principal), None)
+        if plato_def:
+            for opcion_key in plato_def["opciones"].keys():
+                field_name = f"op_{opcion_key}"
+                if field_name in request.POST:
+                    opciones_principal.append(f"{opcion_key}: {request.POST[field_name]}")
+
         plato_principal_completo = f"{plato_principal} ({', '.join(opciones_principal)})" if opciones_principal else plato_principal
 
+        # --- Plato infantil ---
         plato_infantil = request.POST.get('plato_infantil', '')
-        opciones_infantil = [f"{key[7:]}: {request.POST[key]}" for key in request.POST if key.startswith('op_inf_')]
+        opciones_infantil = []
+
+        plato_inf_def = next((p for p in PLATOS_INFANTILES if p["nombre"] == plato_infantil), None)
+        if plato_inf_def and plato_inf_def["opciones"]:
+            for opcion_key in plato_inf_def["opciones"].keys():
+                field_name = f"op_inf_{opcion_key}"
+                if field_name in request.POST:
+                    opciones_infantil.append(f"{opcion_key}: {request.POST[field_name]}")
+
         plato_infantil_completo = f"{plato_infantil} ({', '.join(opciones_infantil)})" if opciones_infantil else plato_infantil
 
+        # --- Otros campos ---
         aclaraciones = request.POST.get('aclaraciones', '').strip()
         num_adultos = request.POST.get('num_adultos')
         num_ninos = request.POST.get('num_ninos')
 
+        # Guardar datos
         eleccion.plato_principal = plato_principal_completo or None
         eleccion.plato_infantil = plato_infantil_completo or None
         eleccion.aclaraciones_alimentarias = aclaraciones
         eleccion.num_adultos = int(num_adultos) if num_adultos else None
         eleccion.num_ninos = int(num_ninos) if num_ninos else None
 
-        # Guardado seguro
+        # Guardado seguro con reintentos
         for _ in range(5):
             try:
                 eleccion.save()
@@ -353,7 +500,6 @@ def elegir_platos(request, cliente_id):
         'num_ninos': eleccion.num_ninos,
     }
     return render(request, 'elegir_platos.html', context)
- 
     
 POSTRES_POSIBLES = [
     "Copa helada",
@@ -423,7 +569,7 @@ EXTRAS_POSIBLES = [
     "Stand de golosinas",
     "Pochoclos y copos de azúcar",
     "Arco de globos",
-    "Mesio arco",
+    "Medio arco",
     "Invitacion digital",
     "Filmación",
     "Set de baño",
@@ -437,7 +583,7 @@ EXTRAS_POSIBLES = [
     "Banner personalizado",
     "Video cronológico",
     "Peinado + maquillaje",
-    "4 letras luminosas",  # <--- detalle extra
+    "letras luminosas",  # <--- detalle extra
     "Cotillón flúor",
     "Espejo mágico",
     "15 rosas",
@@ -536,8 +682,6 @@ SHOWS_POSIBLES = [
     "Personaje interno",
     "Personaje externo",
     "Reportaje",
-    "1 personaje (carioca)",
-    "2 personajes para carioca",
     "Parejas de baile",
     "Plataforma",
     "Show láser",
@@ -551,8 +695,7 @@ def elegir_shows(request, cliente_id):
 
     # Shows que requieren detalle
     shows_con_detalle = [
-        "1 personaje (carioca)",
-        "2 personajes para carioca",
+       
         "Personaje interno",
         "Personaje externo",
     ]
@@ -642,11 +785,11 @@ def elegir_recepcion(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
     RECEPCION_CATEGORIAS = {
-        "Recepción básica ": [
+        "Recepción básica": [
             "Empanadas de copetín",
             "Figazas de pollo al verdeo",
             "Mini pebetes surtidos",
-            "Arollados de pionono",
+            "Arrollados de pionono",
             "Pinchos de tomate y muzzarella"
         ],
         "Recepción completa": [
@@ -664,11 +807,11 @@ def elegir_recepcion(request, cliente_id):
             "Bollos de espinaca",
             "Salchichitas"
         ],
-        "Recepción intermedia ": [
+        "Recepción intermedia": [
             "Empanadas de copetín",
             "Figazas de pollo al verdeo",
             "Mini pebetes surtidos",
-            "Arollados de pionono",
+            "Arrollados de pionono",
             "Pinchos de tomate y muzzarella",
             "Finger fríos y calientes",
             "Mil hojas de papa",
@@ -689,12 +832,18 @@ def elegir_recepcion(request, cliente_id):
         nueva_categoria = request.POST.get("categoria_recepcion")
         items_nuevos = RECEPCION_CATEGORIAS.get(nueva_categoria, [])
 
-        # Borrar todos los ítems anteriores de cualquier categoría
+        # Borrar todos los ítems anteriores
         cliente.recepcion.all().delete()
 
-        # Guardar los ítems de la nueva categoría
-        for item in items_nuevos:
-            EleccionRecepcion.objects.create(cliente=cliente, item=item, cantidad=1)
+        # Guardar solo los items seleccionados
+        seleccionados = request.POST.getlist("items_seleccionados")
+        for item in seleccionados:
+            EleccionRecepcion.objects.create(
+                cliente=cliente,
+                item=item,
+                cantidad=1,
+                observacion=""
+            )
 
         return redirect("elegir_fin_de_fiesta", cliente_id=cliente.id)
 
@@ -704,10 +853,13 @@ def elegir_recepcion(request, cliente_id):
         "categoria_seleccionada": categoria_seleccionada,
     })
 
-
 @login_required
 def resumen_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
+
+    # Verificar perfil del usuario
+    perfil = getattr(request.user, 'perfilusuario', None)
+    mostrar_botones = request.user.is_superuser or (perfil and perfil.tipo != 'limitado')
 
     # Última elección de platos del nuevo modelo
     eleccion_platos = cliente.elecciones.last()
@@ -727,8 +879,20 @@ def resumen_cliente(request, cliente_id):
     # Teléfonos
     telefono = cliente.telefonos.first() if hasattr(cliente, 'telefonos') else None
 
+    # Plan
+    plan = cliente.plan.first() if hasattr(cliente, 'plan') else None
+
+    # Bebidas
+    bebidas = cliente.bebidas.all() if hasattr(cliente, 'bebidas') else []
+    vinos = cliente.vinos.all() if hasattr(cliente, 'vinos') else []
+    choperas = cliente.choperas.all() if hasattr(cliente, 'choperas') else []
+
     return render(request, 'resumen_cliente.html', {
         'cliente': cliente,
+        'plan': plan,
+        'bebidas': bebidas,
+        'vinos': vinos,
+        'choperas': choperas,
         'islas': cliente.islas.all() if hasattr(cliente, 'islas') else [],
         'islas_premium': cliente.islas_premium.all() if hasattr(cliente, 'islas_premium') else [],
         'postres': cliente.postres.all() if hasattr(cliente, 'postres') else [],
@@ -743,63 +907,57 @@ def resumen_cliente(request, cliente_id):
         'telefono': telefono,
         'num_adultos': num_adultos,
         'num_ninos': num_ninos,
+        'mostrar_botones': mostrar_botones,  # pasamos al template
     })
     
-    
-from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render
 from .models import Cliente, PerfilUsuario
+
 
 @login_required
 def buscar_o_crear_cliente(request):
-    if not request.user.is_authenticated:
-        return redirect("login")
-    
-    if request.user.is_superuser:
-        mostrar_botones = True
-    else:
-        try:
-            perfil = request.user.perfilusuario
-            mostrar_botones = perfil.tipo != 'limitado'
-        except PerfilUsuario.DoesNotExist:
-            mostrar_botones = False
-    
-    mensaje = ''
-    cliente_encontrado = None
-    
-    if request.method == 'POST':
-        tipo_busqueda = request.POST.get('tipo_busqueda')
-        valor_busqueda = request.POST.get('valor_busqueda')
-        
-        if 'buscar' in request.POST:
-            try:
-                if tipo_busqueda == 'dni':
-                    cliente_encontrado = Cliente.objects.get(dni=valor_busqueda)
-                elif tipo_busqueda == 'telefono1':
-                    cliente_encontrado = Cliente.objects.get(telefonos__numero1=valor_busqueda)
-                elif tipo_busqueda == 'telefono2':
-                    cliente_encontrado = Cliente.objects.get(telefonos__numero2=valor_busqueda)
-                
-                return redirect('resumen_cliente', cliente_id=cliente_encontrado.id)
-            except Cliente.DoesNotExist:
-                tipo_texto = {
-                    'dni': 'DNI',
-                    'telefono1': 'teléfono 1',
-                    'telefono2': 'teléfono 2'
-                }
-                mensaje = f"No se encontró un cliente con ese {tipo_texto.get(tipo_busqueda, 'dato')}."
-            except Cliente.MultipleObjectsReturned:
-                mensaje = "Se encontraron múltiples clientes, refine la búsqueda."
-        
-        elif 'crear' in request.POST:
-            return redirect('crear_cliente')
-    
-    return render(request, 'inicio.html', {
-        'mensaje': mensaje,
-        'mostrar_botones': mostrar_botones
-    })
+    # Obtener perfil del usuario
+    perfil = getattr(request.user, 'perfilusuario', None)
+    # Determinar si se muestran los botones (crear cliente) según tipo de usuario
+    mostrar_botones = request.user.is_superuser or (perfil and perfil.tipo != 'limitado')
 
+    mensaje = ''
+    clientes_encontrados = None  # No mostrar nada antes de buscar
+
+    # Lista de salones
+    lista_salones = [
+        "Varela", "Varela II", "Berazategui", "Monteverde", "París",
+        "Dream's", "Melody", "Luxor", "Bernal", "Sol Fest",
+        "Clahe", "Onix", "Auguri", "Dominico II", "Gala", "Sarandí II",
+        "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro", "Monte Grande"
+    ]
+
+    # Obtener filtros desde GET
+    dni = request.GET.get('dni', '').strip()
+    salon = request.GET.get('salon', '').strip()
+    fecha_evento = request.GET.get('fecha_evento', '').strip()
+
+    if dni or salon or fecha_evento:
+        clientes_encontrados = Cliente.objects.all()
+
+        if dni:
+            clientes_encontrados = clientes_encontrados.filter(dni__icontains=dni)
+        if salon:
+            clientes_encontrados = clientes_encontrados.filter(salon=salon)
+        if fecha_evento:
+            clientes_encontrados = clientes_encontrados.filter(fecha_evento=fecha_evento)
+
+        if not clientes_encontrados.exists():
+            mensaje = "No se encontraron clientes con los filtros aplicados."
+
+    return render(request, 'inicio.html', {
+        'mostrar_botones': mostrar_botones,  # se pasa al template
+        'mensaje': mensaje,
+        'clientes_encontrados': clientes_encontrados,
+        'salones': lista_salones,
+        'filtros': {'dni': dni, 'salon': salon, 'fecha_evento': fecha_evento}
+    })
 
 @login_required
 def seleccionar_cliente_para_editar(request):
@@ -819,7 +977,7 @@ def seleccionar_cliente_para_editar(request):
 @login_required
 def editar_cliente(request, cliente_id):
     # Podés borrar o no las elecciones previas, según lo que necesites
-    return redirect('elegir_cantidades', cliente_id=cliente_id)
+    return redirect('agregar_telefonos', cliente_id=cliente_id)
 
 
 BARRA_TRAGOS_POSIBLES = [

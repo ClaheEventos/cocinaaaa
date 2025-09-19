@@ -1,18 +1,35 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Crear Cliente</title>
-        <link rel="stylesheet" href="{% static 'estilo.css' %}">
+    <link rel="stylesheet" href="{% static 'estilo.css' %}">
+    <link rel="stylesheet" href="{% static 'especial.css' %}">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-      <link rel="stylesheet" href="{% static 'especial.css' %}">
+    <style>
+        input, select, button {
+            padding: 8px;
+            margin-top: 4px;
+            margin-bottom: 12px;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
 
-
+       
+    </style>
 </head>
 <body>
     
-    <h1>Crear  cliente</h1>
+    <h1>Crear Cliente</h1>
 
     {% if messages %}
         {% for message in messages %}
@@ -23,31 +40,57 @@
     <form method="POST">
         {% csrf_token %}
 
-        <label for="dni">DNI:</label><br>
-        <input type="text" name="dni" id="dni" value="{{ dni }}"><br><br>
+        <label for="dni">DNI:</label>
+        <input type="text" name="dni" id="dni" value="{{ dni }}">
 
-        <label for="nombre">Nombre:</label><br>
-        <input type="text" name="nombre" id="nombre" value="{{ nombre }}"><br><br>
+        <label for="nombre">Nombre:</label>
+        <input type="text" name="nombre" id="nombre" value="{{ nombre }}">
 
-        <label for="fecha_evento">Fecha del Evento:</label><br>
-        <input type="date" name="fecha_evento" id="fecha_evento" value="{{ fecha_evento }}"><br><br>
+        <label for="fecha_evento_alt">Fecha del Evento:</label>
+        <!-- Input oculto que Django recibirá -->
+        <input type="hidden" name="fecha_evento" id="fecha_evento" value="{{ fecha_evento }}">
+        <!-- Input visible para el usuario -->
+        <input type="text" id="fecha_evento_alt" value="{{ fecha_evento }}">
 
-     <label for="salon">Salón:</label><br>
-<select name="salon" id="salon" required>
-  <option value="">--Seleccioná un salón--</option>
-  {% for s in salon %}
-    <option value="{{ s }}" {% if s == salon_seleccionado %}selected{% endif %}>{{ s }}</option>
-  {% endfor %}
-</select><br><br>
+        <label for="tipo_evento">Tipo de Evento:</label>
+        <input type="text" name="tipo_evento" id="tipo_evento" value="{{ tipo_evento }}">
+
+        <label for="horario">Horario:</label>
+        <input type="time" name="horario" id="horario" value="{{ horario }}">
+
+        <label for="salon">Salón:</label>
+        <select name="salon" id="salon" required>
+            <option value="">--Seleccioná un salón--</option>
+            {% for s in salon %}
+                <option value="{{ s }}" {% if s == salon_seleccionado %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+        </select>
 
         <button type="submit">Guardar y continuar</button>
     </form>
 
-    <br>
-      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
-<a href="{% url 'inicio' %}">
-  <button type="button">Volver al inicio</button>
-</a>
-</div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
+        <a href="{% url 'inicio' %}">
+            <button type="button">Volver al inicio</button>
+        </a>
+    </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script>
+        flatpickr("#fecha_evento_alt", {
+            locale: "es",
+            altInput: true,
+            altFormat: "d/m/Y", // visible para usuario
+            dateFormat: "Y-m-d", // lo que Django necesita
+            allowInput: true,
+            altInputClass: "flatpickr-input",
+            onChange: function(selectedDates, dateStr, instance) {
+                document.getElementById("fecha_evento").value = dateStr;
+            }
+        });
+    </script>
+
 </body>
 </html>

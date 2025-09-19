@@ -60,6 +60,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'cocinita.wsgi.application'
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
 
 # Base de datos (mysql)
 DATABASES = {
@@ -80,11 +86,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'es'       # idioma español
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
 USE_I18N = True
 USE_TZ = True
-
+DATE_FORMAT = 'd/m/Y'          # día/mes/año
+TIME_FORMAT = 'H:i'            # hora 24h
+DATETIME_FORMAT = 'd/m/Y H:i'  # fecha + hora
 LOGIN_URL = '/login/'
 
 # 🔹 Archivos estáticos
