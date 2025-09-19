@@ -71,10 +71,10 @@ WSGI_APPLICATION = 'cocinita.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'default',  # PythonAnywhere automáticamente agrega 'clahee$' delante
-        'USER': 'clahee',
-        'PASSWORD': 'BFS3OTS3IBR1',  # la contraseña de MySQL que configuraste
-        'HOST': 'clahee.mysql.pythonanywhere-services.com',
+        'NAME': 'default',  # PythonAnywhere añade automáticamente 'Claheeventos$'
+        'USER': 'Claheeventos',
+        'PASSWORD': 'BFS3OTS3IBR1',  
+        'HOST': 'Claheeventos.mysql.pythonanywhere-services.com',
         'PORT': '3306',
     }
 }
