@@ -5,7 +5,25 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Cliente, Isla,IslaPremium, Postre, MesaDulcePremium, Extra, Show, EleccionFinDeFiesta,Cantidades, EleccionRecepcion,Telefono, BarraTragos
+from functools import wraps
 
+def acceso_intermedio_o_superusuario(view_func):
+    """
+    Permite acceso solo a usuarios tipo 'intermedio' o superusuarios.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+
+        perfil = getattr(request.user, 'perfilusuario', None)
+
+        if request.user.is_superuser or (perfil and perfil.tipo == 'intermedio'):
+            return view_func(request, *args, **kwargs)
+
+        return redirect('sin_permiso')  # página de acceso denegado
+
+    return _wrapped_view
 # Create your views here.
 def login_view(request):
     
@@ -312,6 +330,7 @@ ISLAS_PREMIUM_POSIBLES = [
 ]
 
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_islas_premium(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -407,6 +426,7 @@ PLATOS_INFANTILES = [
 ]
 
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_platos(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
     eleccion, _ = Eleccion_Platos.objects.get_or_create(cliente=cliente)
@@ -510,6 +530,7 @@ POSTRES_POSIBLES = [
     "Durazno con crema",
 ]
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_postres(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -541,6 +562,7 @@ MESA_DULCE_PREMIUM_POSIBLES = [
     "Café y Té",
 ]
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_mesa_dulce_premium(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -594,9 +616,11 @@ EXTRAS_POSIBLES = [
     "Lanza papelitos",
     "Ambientación mesa candy",
     "Reportaje (1 hora)",
-]
+    "Detalle especial",
 
+]
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_extras(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -604,49 +628,59 @@ def elegir_extras(request, cliente_id):
         extras_seleccionados = request.POST.getlist('extras')
         detalle_letras = request.POST.get('detalle_letras', '').strip()
         detalle_chispas = request.POST.get('detalle_chispas', '').strip()
-        detalle_arco = request.POST.get('detalle_arco', '').strip()  # << nuevo campo
+        detalle_arco = request.POST.get('detalle_arco', '').strip()
+        detalle_medio = request.POST.get('detalle_medio', '').strip()
+        detalle_torta = request.POST.get('detalle_torta', '').strip()
+        detalle_shimer = request.POST.get('detalle_shimer', '').strip()
+        detalle_especial = request.POST.get('detalle_especial', '').strip()  # 👈 nuevo campo
 
-        todos_los_extras = extras_seleccionados.copy()
+        # Borrar los que no se seleccionaron
+        cliente.extras.exclude(nombre__regex=r'^[^()]+').exclude(
+            nombre__startswith=tuple(extras_seleccionados)
+        ).delete()
 
-        # Detalle para "4 letras luminosas"
-        if "4 letras luminosas" in extras_seleccionados and detalle_letras:
-            todos_los_extras = [
-                f"4 letras luminosas ({detalle_letras})" if e == "4 letras luminosas" else e
-                for e in todos_los_extras
-            ]
+        for extra in extras_seleccionados:
+            detalle = ""
+            if extra == "letras luminosas":
+                detalle = detalle_letras
+            elif extra == "chispas frías":
+                detalle = detalle_chispas
+            elif extra == "Arco de globos":
+                detalle = detalle_arco
+            elif extra == "Medio arco":
+                detalle = detalle_medio
+            elif extra == "Torta":
+                detalle = detalle_torta
+            elif extra == "Shimer":
+                detalle = detalle_shimer
+            elif extra == "Detalle especial":   # 👈 nuevo
+                detalle = detalle_especial
 
-        # Detalle para "chispas frías"
-        if "chispas frías" in extras_seleccionados and detalle_chispas:
-            todos_los_extras = [
-                f"chispas frías ({detalle_chispas})" if e == "chispas frías" else e
-                for e in todos_los_extras
-            ]
+            nombre_final = f"{extra} ({detalle})" if detalle else extra
 
-        # Detalle para "Arco de globos"
-        if "Arco de globos" in extras_seleccionados and detalle_arco:
-            todos_los_extras = [
-                f"Arco de globos ({detalle_arco})" if e == "Arco de globos" else e
-                for e in todos_los_extras
-            ]
-
-        extras_final = " | ".join(todos_los_extras) if todos_los_extras else ""
-
-        cliente.extras.all().delete()
-        if extras_final:
-            Extra.objects.create(cliente=cliente, nombre=extras_final)
+            # Actualiza o crea según el prefijo del nombre
+            obj, created = Extra.objects.update_or_create(
+                cliente=cliente,
+                nombre__startswith=extra,
+                defaults={'nombre': nombre_final}
+            )
 
         return redirect('elegir_shows', cliente_id=cliente.id)
 
-    # --- Cargar lo que ya estaba elegido ---
-    extras_ya_elegidos_str = cliente.extras.values_list('nombre', flat=True).first() or ""
-    extras_ya_elegidos = [x.strip() for x in extras_ya_elegidos_str.split('|')]
+    # --- Cargar lo ya elegido ---
+    extras_ya_elegidos = list(cliente.extras.values_list('nombre', flat=True))
 
     detalle_letras_ya = ""
     detalle_chispas_ya = ""
     detalle_arco_ya = ""
+    detalle_medio_ya = ""
+    detalle_torta_ya = ""
+    detalle_shimer_ya = ""
+    detalle_especial_ya = ""  # 👈 nuevo
+
     import re
     for ex in extras_ya_elegidos:
-        if ex.startswith("4 letras luminosas"):
+        if ex.startswith("letras luminosas"):
             match = re.search(r"\((.*)\)", ex)
             if match:
                 detalle_letras_ya = match.group(1)
@@ -658,16 +692,35 @@ def elegir_extras(request, cliente_id):
             match = re.search(r"\((.*)\)", ex)
             if match:
                 detalle_arco_ya = match.group(1)
+        elif ex.startswith("Medio arco"):
+            match = re.search(r"\((.*)\)", ex)
+            if match:
+                detalle_medio_ya = match.group(1)
+        elif ex.startswith("Torta"):
+            match = re.search(r"\((.*)\)", ex)
+            if match:
+                detalle_torta_ya = match.group(1)
+        elif ex.startswith("Shimer"):
+            match = re.search(r"\((.*)\)", ex)
+            if match:
+                detalle_shimer_ya = match.group(1)
+        elif ex.startswith("Detalle especial"):   # 👈 nuevo
+            match = re.search(r"\((.*)\)", ex)
+            if match:
+                detalle_especial_ya = match.group(1)
 
     return render(request, 'elegir_extras.html', {
         'cliente': cliente,
         'extras_posibles': EXTRAS_POSIBLES,
-        'extras_ya_elegidos': extras_ya_elegidos,
+        'extras_ya_elegidos': [ex.split(" (")[0] for ex in extras_ya_elegidos],  # solo nombre base
         'detalle_letras_ya': detalle_letras_ya,
         'detalle_chispas_ya': detalle_chispas_ya,
-        'detalle_arco_ya': detalle_arco_ya,  # pasar al template
+        'detalle_arco_ya': detalle_arco_ya,
+        'detalle_medio_ya': detalle_medio_ya,
+        'detalle_torta_ya': detalle_torta_ya,
+        'detalle_shimer_ya': detalle_shimer_ya,
+        'detalle_especial_ya': detalle_especial_ya,  # 👈 pasar al template
     })
-
 
     
 SHOWS_POSIBLES = [
@@ -690,6 +743,7 @@ SHOWS_POSIBLES = [
 ]
 
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_shows(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -756,6 +810,7 @@ FINES_DE_FIESTA_POSIBLES = [
     "Desayuno criollo: tortafritas con mate cocido",
 ]
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_fin_de_fiesta(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -781,12 +836,14 @@ def elegir_fin_de_fiesta(request, cliente_id):
 
 
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_recepcion(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
     RECEPCION_CATEGORIAS = {
         "Recepción básica": [
             "Empanadas de copetín",
+
             "Figazas de pollo al verdeo",
             "Mini pebetes surtidos",
             "Arrollados de pionono",
@@ -854,6 +911,7 @@ def elegir_recepcion(request, cliente_id):
     })
 
 @login_required
+@acceso_intermedio_o_superusuario
 def resumen_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -975,6 +1033,7 @@ def seleccionar_cliente_para_editar(request):
     return render(request, 'seleccionar_cliente_para_editar.html')
     
 @login_required
+
 def editar_cliente(request, cliente_id):
     # Podés borrar o no las elecciones previas, según lo que necesites
     return redirect('agregar_telefonos', cliente_id=cliente_id)
@@ -987,6 +1046,7 @@ BARRA_TRAGOS_POSIBLES = [
     "All inclisive",
 ]
 @login_required
+@acceso_intermedio_o_superusuario
 def elegir_barra_tragos(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 

@@ -15,7 +15,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-vvp)peja#)ffq_)ib-#r%xuia!1(gq1a*w9q%mtnp#t@fp96p0'
-DEBUG = False   # ⚠️ En producción ponelo en False
+DEBUG = True   # ⚠️ En producción ponelo en False
 
 # 🔹 Tu dominio en PythonAnywhere
 ALLOWED_HOSTS = ['*']
@@ -60,24 +60,24 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'cocinita.wsgi.application'
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
-
-# Base de datos (mysql)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'default',  # PythonAnywhere añade automáticamente 'Claheeventos$'
-        'USER': 'Claheeventos',
-        'PASSWORD': 'BFS3OTS3IBR1',  
-        'HOST': 'Claheeventos.mysql.pythonanywhere-services.com',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Base de datos (mysql)
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'default',  # PythonAnywhere añade automáticamente 'Claheeventos$'
+#        'USER': 'Claheeventos',
+#        'PASSWORD': 'BFS3OTS3IBR1',  
+#        'HOST': 'Claheeventos.mysql.pythonanywhere-services.com',
+#        'PORT': '3306',
+#    }
+#}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -96,7 +96,7 @@ DATETIME_FORMAT = 'd/m/Y H:i'  # fecha + hora
 LOGIN_URL = '/login/'
 
 # 🔹 Archivos estáticos
-STATIC_URL = '/static/'
+STATIC_URL = '/myapp/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

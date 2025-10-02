@@ -44,8 +44,8 @@
                 {{ extra }}
             </label>
 
-            <!-- Campo detalle para "4 letras luminosas" -->
-            {% if extra == "4 letras luminosas" %}
+            <!-- Campo detalle para " letras luminosas" -->
+            {% if extra == "letras luminosas" %}
                 <input type="text" name="detalle_letras"
                        id="campoLetras"
                        placeholder="Ingrese las letras (ej: LOVE)"
@@ -67,8 +67,37 @@
                        placeholder="Ingrese el color del arco de globos"
                        style="display:none; margin-left: 10px;"
                        value="{{ detalle_arco_ya }}">
-            {% endif %}
-        </div>
+
+            {% elif extra == "Medio arco" %}
+                <input type="text" name="detalle_medio"
+                      id="campoMedio"
+                      placeholder="Ingrese el color del medio arco"
+                      style="display:none; margin-left: 10px;"
+                     value="{{ detalle_medio_ya }}">
+            {% elif extra == "Torta" %}
+                <input type="text" name="detalle_torta"
+                      id="campoTorta"
+                      placeholder="Ingrese detalle de la torta"
+                      style="display:none; margin-left: 10px;"
+                      value="{{ detalle_torta_ya }}">
+
+           {% elif extra == "Shimer" %}
+               <input type="text" name="detalle_shimer"
+                     id="campoShimer"
+                     placeholder="Ingrese detalle de Shimer"
+                     style="display:none; margin-left: 10px;"
+                     value="{{ detalle_shimer_ya }}">
+
+            {% elif extra == "Detalle especial" %}
+                <input type="text" name="detalle_especial"
+                    id="campoEspecial"
+                    placeholder="Ingrese cualquier detalle extra"
+                    style="display:none; margin-left: 10px;"
+                    value="{{ detalle_especial_ya }}">
+                             {% endif %}
+
+                    </div>
+
     {% endfor %}
 
     <hr style="width: 100%; border: 1px solid #ffeb3b; margin: 30px auto;" />
@@ -82,7 +111,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // Letras
-    const checkLetras = document.querySelector('input[value="4 letras luminosas"]');
+    const checkLetras = document.querySelector('input[value="letras luminosas"]');
     const campoLetras = document.getElementById("campoLetras");
 
     if (checkLetras && campoLetras) {
@@ -119,6 +148,55 @@ document.addEventListener("DOMContentLoaded", function () {
         checkArco.addEventListener("change", toggleCampoArco);
         toggleCampoArco();
     }
+    // Medio arco
+const checkMedio = document.querySelector('input[value="Medio arco"]');
+const campoMedio = document.getElementById("campoMedio");
+
+if (checkMedio && campoMedio) {
+    function toggleCampoMedio() {
+        campoMedio.style.display = checkMedio.checked ? "inline-block" : "none";
+        if (!checkMedio.checked) campoMedio.value = "";
+    }
+    checkMedio.addEventListener("change", toggleCampoMedio);
+    toggleCampoMedio();
+}
+const checkTorta = document.querySelector('input[value="Torta"]');
+const campoTorta = document.getElementById("campoTorta");
+
+if (checkTorta && campoTorta) {
+    function toggleCampoTorta() {
+        campoTorta.style.display = checkTorta.checked ? "inline-block" : "none";
+        if (!checkTorta.checked) campoTorta.value = "";
+    }
+    checkTorta.addEventListener("change", toggleCampoTorta);
+    toggleCampoTorta();
+}
+
+// Shimer
+const checkShimer = document.querySelector('input[value="Shimer"]');
+const campoShimer = document.getElementById("campoShimer");
+
+if (checkShimer && campoShimer) {
+    function toggleCampoShimer() {
+        campoShimer.style.display = checkShimer.checked ? "inline-block" : "none";
+        if (!checkShimer.checked) campoShimer.value = "";
+    }
+    checkShimer.addEventListener("change", toggleCampoShimer);
+    toggleCampoShimer();
+}
+
+// Detalle especial
+const checkEspecial = document.querySelector('input[value="Detalle especial"]');
+const campoEspecial = document.getElementById("campoEspecial");
+
+if (checkEspecial && campoEspecial) {
+    function toggleCampoEspecial() {
+        campoEspecial.style.display = checkEspecial.checked ? "inline-block" : "none";
+        if (!checkEspecial.checked) campoEspecial.value = "";
+    }
+    checkEspecial.addEventListener("change", toggleCampoEspecial);
+    toggleCampoEspecial();
+}
 });
 </script>
 
