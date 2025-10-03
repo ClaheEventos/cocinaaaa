@@ -911,7 +911,6 @@ def elegir_recepcion(request, cliente_id):
     })
 
 @login_required
-@acceso_intermedio_o_superusuario
 def resumen_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
