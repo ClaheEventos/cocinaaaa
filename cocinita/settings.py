@@ -45,7 +45,6 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -75,23 +74,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'cocinita.wsgi.application'
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    'default': {  # <--- ¡Asegúrate de que se llame 'default'!
+        'ENGINE': 'django.db.backends.mysql', 
+        
+        'NAME': 'cocina', # Usa 'cocina' o 'it', el nombre que creaste
+        
+        'USER': 'cristian', 
+        'PASSWORD': 'patomalo666',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        
+        # Opcional, pero recomendado:
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
     }
 }
-
-# Base de datos (mysql)
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.mysql',
-#        'NAME': 'default',  # PythonAnywhere añade automáticamente 'Claheeventos$'
-#        'USER': 'Claheeventos',
-#        'PASSWORD': 'BFS3OTS3IBR1',  
-#        'HOST': 'Claheeventos.mysql.pythonanywhere-services.com',
-#        'PORT': '3306',
-#    }
-#}
 
 
 REST_FRAMEWORK = {
@@ -116,6 +114,7 @@ TIME_FORMAT = 'H:i'            # hora 24h
 DATETIME_FORMAT = 'd/m/Y H:i'  # fecha + hora
 LOGIN_URL = '/login/'
 
+# 🔹 Archivos estáticos
 # 🔹 Archivos estáticos
 STATIC_URL = '/myapp/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'

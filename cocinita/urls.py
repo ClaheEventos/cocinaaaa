@@ -17,12 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.http import HttpResponse
+from django.conf import settings  # <<<<< ¡IMPORTAR LA CONFIGURACIÓN!
+
+from django.conf.urls.static import static
+def home(request):
+    return HttpResponse("✅ Django funciona detrás de Cloudflare!")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('ge/', include('myapp.urls')),  # Incluye todas las rutas de myapp
+    path('', home),  # <--- Agregamos la raíz
+    path('ode/', include('myapp.urls')),
     path("api/jefe/", include("login_jefe.urls")),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-
 ]
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

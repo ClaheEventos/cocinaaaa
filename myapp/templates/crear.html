@@ -41,22 +41,27 @@
         {% csrf_token %}
 
         <label for="dni">DNI:</label>
-        <input type="text" name="dni" id="dni" value="{{ dni }}">
+        <input type="text" name="dni" id="dni" value="{{ dni|default:'' }}">
 
         <label for="nombre">Nombre:</label>
-        <input type="text" name="nombre" id="nombre" value="{{ nombre }}">
+        <input type="text" name="nombre" id="nombre" value="{{ nombre|default:'' }}">
 
         <label for="fecha_evento_alt">Fecha del Evento:</label>
-        <!-- Input oculto que Django recibirá -->
-        <input type="hidden" name="fecha_evento" id="fecha_evento" value="{{ fecha_evento }}">
-        <!-- Input visible para el usuario -->
-        <input type="text" id="fecha_evento_alt" value="{{ fecha_evento }}">
-
+        <input type="hidden" name="fecha_evento" id="fecha_evento" value="{{ fecha_evento|default:'' }}">
+        <input type="text" id="fecha_evento_alt" value=""> 
         <label for="tipo_evento">Tipo de Evento:</label>
-        <input type="text" name="tipo_evento" id="tipo_evento" value="{{ tipo_evento }}">
+        <select name="tipo_evento" id="tipo_evento" required>
+            <option value="">--Seleccioná un tipo--</option>
+            {% for evento in tipos_evento %}
+                <option value="{{ evento }}" 
+                    {% if evento == tipo_evento_seleccionado %}selected{% endif %}>
+                    {{ evento }}
+                </option>
+            {% endfor %}
+        </select>
 
         <label for="horario">Horario:</label>
-        <input type="time" name="horario" id="horario" value="{{ horario }}">
+        <input type="time" name="horario" id="horario" value="{{ horario|default:'' }}">
 
         <label for="salon">Salón:</label>
         <select name="salon" id="salon" required>
@@ -75,11 +80,11 @@
         </a>
     </div>
 
-    <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script>
-        flatpickr("#fecha_evento_alt", {
+        // Inicializar Flatpickr
+        var fp = flatpickr("#fecha_evento_alt", {
             locale: "es",
             altInput: true,
             altFormat: "d/m/Y", // visible para usuario
@@ -87,9 +92,16 @@
             allowInput: true,
             altInputClass: "flatpickr-input",
             onChange: function(selectedDates, dateStr, instance) {
+                // Sincroniza el valor con el campo oculto
                 document.getElementById("fecha_evento").value = dateStr;
             }
         });
+
+        // Restaurar el valor de la fecha al recargar la página por error
+        var fechaOculta = document.getElementById("fecha_evento").value;
+        if (fechaOculta) {
+             fp.setDate(fechaOculta, true);
+        }
     </script>
 
 </body>

@@ -77,7 +77,7 @@ def lista_clientes(request):
 # -------------------------------
 # EDITAR CLIENTE
 # -------------------------------
-@login_required
+@login_required(login_url='/ode/login/')
 def editar_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
     mensaje = ""
@@ -101,7 +101,7 @@ from .models import Cliente, Plan, EleccionBebidas, EleccionVinos, EleccionChope
 # ===== Planes =====
 PLANES_POSIBLES = ["Plan Plata", "Plan Oro Viejo", "ALL INCLUSIVE", "Plan Oro Nuevo"]
 
-@login_required
+@login_required(login_url='/ode/login/')
 def elegir_plan(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -133,7 +133,7 @@ BEBIDAS_POSIBLES = ["Primera Lineas", "Segunda Linea"]
 VINOS_POSIBLES = ["Primera Lineas", "Segunda Linea "]
 CHOPERAS_SABORES = ["Sin Chopera", "Chopera 30", "Chopera 40", "Chopera 50", "Otro"]
 
-@login_required
+@login_required(login_url='/ode/login/')
 def elegir_bebidas(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -207,54 +207,57 @@ from datetime import datetime
 from datetime import datetime
 from .models import Cliente
 
-@login_required
+@login_required(login_url='/ode/login/')
 def crear_cliente(request):
+    # Lista de salones
     salon = [
         "Varela", "Varela II", "Berazategui", "Monteverde", "París",
         "Dream's", "Melody", "Luxor", "Bernal", "Sol Fest",
         "Clahe", "Onix", "Auguri", "Dominico II", "Gala", "Sarandí II",
-        "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro", "Monte Grande",
+        "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro",
+        "Monte Grande", "Arcoiris" ,"Varela III", "Green House",
+    ]
+
+    # Nueva lista de tipos de evento
+    tipos_evento = [
+        "Cumpleaños de 15", "Boda", "Aniversario", "Bautismo",
+        "Comunión", "Evento Empresarial", "Fiesta de Egresados",
+        "Infantil", "Otro",
     ]
 
     if request.method == 'POST':
         dni = request.POST.get('dni')
         nombre = request.POST.get('nombre')
-        fecha_evento_str = request.POST.get('fecha_evento')  # viene en formato YYYY-MM-DD
+        fecha_evento_str = request.POST.get('fecha_evento')
         horario_evento_str = request.POST.get('horario')
-        tipo_evento = request.POST.get('tipo_evento')
+        tipo_evento_seleccionado = request.POST.get('tipo_evento') # Nuevo nombre de variable para POST
         salon_seleccionado = request.POST.get('salon')
+
+        # --- Contexto Base para Respuestas de Error ---
+        error_context = {
+            'dni': dni,
+            'nombre': nombre,
+            'fecha_evento': fecha_evento_str,
+            'horario': horario_evento_str,
+            'salon': salon,
+            'tipos_evento': tipos_evento, # ¡Agregado aquí!
+            'salon_seleccionado': salon_seleccionado,
+            'tipo_evento_seleccionado': tipo_evento_seleccionado, # Para mantener la selección
+        }
 
         # Convertir fecha a objeto date
         try:
             fecha_evento = datetime.strptime(fecha_evento_str, "%Y-%m-%d").date()
         except ValueError:
             messages.error(request, "Formato de fecha inválido. Usa AAAA-MM-DD.")
-            return render(request, 'crear.html', {
-                'dni': dni,
-                'nombre': nombre,
-                'fecha_evento': fecha_evento_str,
-                'tipo_evento': tipo_evento,
-                'horario': horario_evento_str,
-                'salon': salon,
-                'salon_seleccionado': salon_seleccionado,
-            })
+            return render(request, 'crear.html', error_context)
 
         # Convertir horario a objeto time
         try:
             horario_evento = datetime.strptime(horario_evento_str, "%H:%M").time()
         except ValueError:
             messages.error(request, "Formato de horario inválido. Usa HH:MM en 24h.")
-            return render(request, 'crear.html', {
-                'dni': dni,
-                'nombre': nombre,
-                'fecha_evento': fecha_evento_str,
-                'tipo_evento': tipo_evento,
-                'horario': horario_evento_str,
-                'salon': salon,
-                'salon_seleccionado': salon_seleccionado,
-            })
-
-       
+            return render(request, 'crear.html', error_context)
 
         # Guardar cliente
         cliente = Cliente(
@@ -262,17 +265,19 @@ def crear_cliente(request):
             nombre=nombre,
             fecha_evento=fecha_evento,
             horario_evento=horario_evento,
-            tipo_evento=tipo_evento,
+            tipo_evento=tipo_evento_seleccionado, # Usar el valor del formulario
             salon=salon_seleccionado,
         )
         cliente.save()
 
         return redirect('agregar_telefonos', cliente_id=cliente.id)
 
+    # --- Solicitud GET inicial ---
     return render(request, 'crear.html', {
-        'salon': salon
+        'salon': salon,
+        'tipos_evento': tipos_evento # Se pasa la lista para la carga inicial del formulario
     })
-@login_required
+@login_required(login_url='/ode/login/')
 def agregar_telefonos(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -296,7 +301,7 @@ ISLAS_POSIBLES = [
     "Isla Mexicana",
     # agregá todas las opciones que quieras
 ]
-@login_required
+@login_required(login_url='/ode/login/')
 def elegir_islas(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -329,7 +334,7 @@ ISLAS_PREMIUM_POSIBLES = [
     "Isla de Pastas",
 ]
 
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_islas_premium(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -354,7 +359,7 @@ def elegir_islas_premium(request, cliente_id):
         'islas_premium_elegidas': islas_premium_elegidas,
     })
     
-@login_required
+@login_required(login_url='/ode/login/')
 def elegir_cantidades(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -424,7 +429,7 @@ PLATOS_INFANTILES = [
     {"nombre": "Medallón de pollo crispy con papas fritas", "opciones": None},
     {"nombre": "Nuggets con papas fritas", "opciones": None},
 ]
-
+@login_required(login_url='/ode/login/')
 @login_required
 @acceso_intermedio_o_superusuario
 def elegir_platos(request, cliente_id):
@@ -529,7 +534,7 @@ POSTRES_POSIBLES = [
     "Shot de mousse",
     "Durazno con crema",
 ]
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_postres(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -561,7 +566,7 @@ MESA_DULCE_PREMIUM_POSIBLES = [
     "Isla de Tentaciones Dulces",
     "Café y Té",
 ]
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_mesa_dulce_premium(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -619,7 +624,7 @@ EXTRAS_POSIBLES = [
     "Detalle especial",
 
 ]
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_extras(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -742,7 +747,7 @@ SHOWS_POSIBLES = [
     "Imitador",
 ]
 
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_shows(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -809,7 +814,7 @@ FINES_DE_FIESTA_POSIBLES = [
     "Súper panchos con papas pay",
     "Desayuno criollo: tortafritas con mate cocido",
 ]
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_fin_de_fiesta(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -835,7 +840,7 @@ def elegir_fin_de_fiesta(request, cliente_id):
     })
 
 
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_recepcion(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
@@ -910,7 +915,7 @@ def elegir_recepcion(request, cliente_id):
         "categoria_seleccionada": categoria_seleccionada,
     })
 
-@login_required
+@login_required(login_url='/ode/login/')
 def resumen_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
 
@@ -972,7 +977,7 @@ from django.shortcuts import render
 from .models import Cliente, PerfilUsuario
 
 
-@login_required
+@login_required(login_url='/ode/login/')
 def buscar_o_crear_cliente(request):
     # Obtener perfil del usuario
     perfil = getattr(request.user, 'perfilusuario', None)
@@ -987,7 +992,8 @@ def buscar_o_crear_cliente(request):
         "Varela", "Varela II", "Berazategui", "Monteverde", "París",
         "Dream's", "Melody", "Luxor", "Bernal", "Sol Fest",
         "Clahe", "Onix", "Auguri", "Dominico II", "Gala", "Sarandí II",
-        "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro", "Monte Grande"
+        "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro",
+         "Monte Grande", "Arcoiris" ,"Varela III", "Green House",
     ]
 
     # Obtener filtros desde GET
@@ -1016,7 +1022,7 @@ def buscar_o_crear_cliente(request):
         'filtros': {'dni': dni, 'salon': salon, 'fecha_evento': fecha_evento}
     })
 
-@login_required
+@login_required(login_url='/ode/login/')
 def seleccionar_cliente_para_editar(request):
     if request.method == 'POST':
         dni = request.POST.get('cliente_dni')  # lo que mandás desde el input
@@ -1031,8 +1037,7 @@ def seleccionar_cliente_para_editar(request):
 
     return render(request, 'seleccionar_cliente_para_editar.html')
     
-@login_required
-
+@login_required(login_url='/ode/login/')
 def editar_cliente(request, cliente_id):
     # Podés borrar o no las elecciones previas, según lo que necesites
     return redirect('agregar_telefonos', cliente_id=cliente_id)
@@ -1044,7 +1049,7 @@ BARRA_TRAGOS_POSIBLES = [
     "6 horas",
     "All inclisive",
 ]
-@login_required
+@login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_barra_tragos(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
