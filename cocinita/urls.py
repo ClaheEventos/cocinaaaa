@@ -29,6 +29,8 @@ urlpatterns = [
     path('', home),  # <--- Agregamos la raíz
     path('ode/', include('myapp.urls')),
     path("api/jefe/", include("login_jefe.urls")),
+    path('api/ventas/', include('login_ventas.urls')),
+
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]

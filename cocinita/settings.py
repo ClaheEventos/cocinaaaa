@@ -34,6 +34,7 @@ INSTALLED_APPS = [
      'rest_framework_simplejwt',
     'myapp',
     'login_jefe',
+    'login_ventas',
     "corsheaders",
 
 
@@ -50,9 +51,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 CORS_ALLOWED_ORIGINS = [
+
     "https://48p82xms-8002.brs.devtunnels.ms",
     "http://localhost:5173",
     'http://127.0.0.1:8002',
+
+
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -75,24 +79,33 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'cocinita.wsgi.application'
-DATABASES = {
-    'default': {  # <--- ¡Asegúrate de que se llame 'default'!
-        'ENGINE': 'django.db.backends.mysql', 
-        
-        'NAME': 'cocina', # Usa 'cocina' o 'it', el nombre que creaste
-        
-        'USER': 'cristian', 
-        'PASSWORD': 'patomalo666',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        
-        # Opcional, pero recomendado:
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
-    }
-}
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        # El nombre del archivo donde se guardará la base de datos.
+#        # BASE_DIR es una variable de Django que apunta a la raíz del proyecto.
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
+DATABASES = {
+     'default': { 
+         'ENGINE': 'django.db.backends.mysql', 
+        
+         'NAME': 'cocina', 
+        
+         'USER': 'cristian', 
+         'PASSWORD': 'patomalo666',
+         'HOST': '127.0.0.1',
+         'PORT': '3306',
+        
+         # Opcional, pero recomendado:
+         'OPTIONS': {
+             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+         }
+     }
+ }
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
