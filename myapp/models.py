@@ -113,7 +113,7 @@ class Show(models.Model):
     
 class EleccionFinDeFiesta(models.Model):
     cliente = models.OneToOneField(Cliente, on_delete=models.CASCADE, related_name='fin_de_fiesta')
-    nombre = models.CharField(max_length=200)
+    nombre = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"{self.nombre} - {self.cliente.nombre}"

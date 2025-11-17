@@ -64,6 +64,11 @@
 </form>
 
 <script>
+    
+    function toggleMenu() {
+        document.getElementById('navLinks').classList.toggle('show');
+    }
+
 document.addEventListener("DOMContentLoaded", function () {
     const checkboxes = document.querySelectorAll('input[type="checkbox"][name="shows"]');
     checkboxes.forEach(cb => {

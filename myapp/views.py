@@ -99,7 +99,7 @@ def editar_cliente(request, cliente_id):
 from .models import Cliente, Plan, EleccionBebidas, EleccionVinos, EleccionChoperas
 
 # ===== Planes =====
-PLANES_POSIBLES = ["Plan Plata", "Plan Oro Viejo", "ALL INCLUSIVE", "Plan Oro Nuevo"]
+PLANES_POSIBLES = ["Plan Plata", "Plan Oro Viejo", "ALL INCLUSIVE", "Plan Oro Nuevo", "Clasic", "Premiun viejo", "Premiun Nuevo", "Platinum viejo", "Platinum Nuevo", "Plan gold","plan pizza party"]
 
 @login_required(login_url='/ode/login/')
 def elegir_plan(request, cliente_id):
@@ -814,6 +814,7 @@ FINES_DE_FIESTA_POSIBLES = [
     "Súper panchos con papas pay",
     "Desayuno criollo: tortafritas con mate cocido",
 ]
+
 @login_required(login_url='/ode/login/')
 @acceso_intermedio_o_superusuario
 def elegir_fin_de_fiesta(request, cliente_id):
