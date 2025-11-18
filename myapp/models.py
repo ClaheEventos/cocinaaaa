@@ -167,3 +167,23 @@ def crear_perfil_usuario(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def guardar_perfil_usuario(sender, instance, **kwargs):
     instance.perfilusuario.save()
+
+
+class Personal(models.Model):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='personal')
+    nombre = models.CharField(max_length=50)
+    cantidad = models.PositiveIntegerField(default=1)
+    horas = models.PositiveIntegerField(null=True, blank=True)
+
+    def __str__(self):
+        if self.nombre == "Barman":
+            return f"{self.nombre} x {self.cantidad} - {self.horas} horas - {self.cliente.nombre}"
+        return f"{self.nombre} x {self.cantidad} - {self.cliente.nombre}"
+    
+
+class Boutique(models.Model):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name="boutique")
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.cliente.nombre} - {self.nombre}"

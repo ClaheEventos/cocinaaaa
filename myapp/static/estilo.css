@@ -24,7 +24,14 @@ h1 {
     margin-bottom: 30px;
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
-
+h4 {
+    text-align: center;
+    
+}
+h5 {
+    text-align: center;
+    
+}
 form {
     text-align: center;
     background-color: rgba(0, 0, 0, 1); 
@@ -113,13 +120,7 @@ button:hover {
     background-color: #fff176;
 }
 
-hr.divisor {
-    border: none;
-    height: 1px;
-    background-color: #ffeb3b;
-    margin: 30px auto;
-    width: 100%;
-}
+
 
 .botones {
     display: flex;

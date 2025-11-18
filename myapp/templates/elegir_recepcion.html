@@ -22,11 +22,13 @@
 </head>
 <body>
   <!-- Navbar -->
-  <nav class="navbar">
+<nav class="navbar">
     <button class="menu-toggle" onclick="toggleMenu()">☰</button>
     <div class="nav-links" id="navLinks">
         <a href="{% url 'agregar_telefonos' cliente_id=cliente.id %}">Teléfonos</a>
         <a href="{% url 'elegir_plan' cliente_id=cliente.id %}">Plan</a>
+        <a href="{% url 'elegir_personal' cliente_id=cliente.id %}">Personal</a>
+        <a href="{% url 'elegir_boutique' cliente_id=cliente.id %}">Boutique</a> <!-- NUEVO LINK -->
         <a href="{% url 'elegir_bebidas' cliente_id=cliente.id %}">Bebidas</a>
         <a href="{% url 'elegir_islas' cliente_id=cliente.id %}">Islas</a>
         <a href="{% url 'elegir_islas_premium' cliente_id=cliente.id %}">Islas Premium</a>
@@ -39,9 +41,10 @@
         <a href="{% url 'elegir_recepcion' cliente_id=cliente.id %}">Recepción</a>
         <a href="{% url 'elegir_fin_de_fiesta' cliente_id=cliente.id %}">Fin de Fiesta</a>
     </div>
-  </nav>
+</nav
 
-  <h1>Elegir categoría de Recepción</h1>
+  <h1></h1>
+  <h1>Recepción</h1>
 
   <form method="post">
       {% csrf_token %}
@@ -66,7 +69,9 @@
   </form>
 
   <script>
+      // Diccionario de categorías e items
       const categoriasItems = {{ categorias|safe }};
+      const previos = {{ elecciones_previas|safe }}; // items previamente seleccionados
 
       function mostrarItems(categoria) {
           const contenedor = document.getElementById("items_categoria");
@@ -76,10 +81,11 @@
 
           items.forEach(item => {
               const safeName = item.replace(/\s+/g, "_").replace(/[()]/g, "");
+              const checked = previos.includes(item) ? "checked" : "";
               html += `
                   <div class="item-container">
                       <label>
-                          <input type="checkbox" name="items_seleccionados" value="${item}" checked>
+                          <input type="checkbox" name="items_seleccionados" value="${item}" ${checked}>
                           ${item}
                       </label>
                   </div>

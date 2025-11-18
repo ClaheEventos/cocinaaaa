@@ -1,0 +1,242 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+        <meta charset="UTF-8" />
+    <title>Elegir Mesa Dulce Premium</title>
+    <link rel="stylesheet" href="{% static 'estilo.css' %}">
+    <link rel="stylesheet" href="{% static 'navbar.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Personal – {{ cliente.nombre }}</title>
+    
+    {# ESTILOS CSS INCRUSTADOS #}
+    <style>
+     
+
+        /* FORMULARIO CONTENEDOR */
+        form {
+            background-color: rgba(0, 0, 0, 1); 
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            max-width: 450px;
+            margin: 40px auto;
+        }
+
+        /* Contenedor de cada Opción de Personal (el div simple) */
+        form > div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 5px !important;
+            border-bottom: 1px dashed rgba(255, 204, 0, 0.15);
+        }
+        form > div:last-of-type {
+            border-bottom: none;
+        }
+
+        /* Etiqueta (Label) del Personal */
+        form > div label {
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            color: #ffffff;
+            font-weight: 700; 
+            margin-bottom: 0;
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            padding: 5px 10px;
+            
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Checkbox */
+        input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+            accent-color: #ffd700;
+            cursor: pointer;
+        }
+
+        /* Input de Cantidad */
+        input[type="number"] {
+            padding: 8px 10px;
+            width: 80px !important; 
+            margin-left: 10px !important; 
+            text-align: center;
+            font-size: 1rem;
+            border: 2px solid #ffd700;
+            background: #ffffff;
+            color: #121212;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        /* Select de Horas (Barman) */
+        select#horasBarman {
+            padding: 8px 10px;
+            margin-left: 10px !important;
+            width: 120px;
+            min-width: 120px;
+            border: 2px solid #ffd700;
+            background: #1a1a1a;
+            color: #ffffff;
+            border-radius: 5px;
+        }
+        select#horasBarman option {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        /* Botón de Continuar */
+        button[type="submit"] {
+            background-color: #ffeb3b;
+            color: #121212;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            margin-top: 30px;
+            border-radius: 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* RESPONSIVIDAD (Asegura que el menú funcione y que los inputs se vean bien en móvil) */
+        @media screen and (max-width: 600px) {
+            .menu-toggle { display: block; }
+            .nav-links { display: none; flex-direction: column; }
+            .nav-links.active { display: flex; }
+
+            form {
+                max-width: 95%;
+                padding: 20px;
+            }
+
+            form > div {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            label {
+                width: 100%;
+                font-size: 1rem;
+            }
+            
+            input[type="number"] {
+                width: 100px !important;
+                margin-left: 0 !important;
+            }
+
+            select#horasBarman {
+                width: 100%;
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div class="nav-links" id="navLinks">
+        <a href="{% url 'agregar_telefonos' cliente_id=cliente.id %}">Teléfonos</a>
+        <a href="{% url 'elegir_plan' cliente_id=cliente.id %}">Plan</a>
+        <a href="{% url 'elegir_personal' cliente_id=cliente.id %}">Personal</a>
+        <a href="{% url 'elegir_boutique' cliente_id=cliente.id %}">Boutique</a>
+        <a href="{% url 'elegir_bebidas' cliente_id=cliente.id %}">Bebidas</a>
+        <a href="{% url 'elegir_islas' cliente_id=cliente.id %}">Islas</a>
+        <a href="{% url 'elegir_islas_premium' cliente_id=cliente.id %}">Islas Premium</a>
+        <a href="{% url 'elegir_barra_tragos' cliente_id=cliente.id %}">Barra de Tragos</a>
+        <a href="{% url 'elegir_platos' cliente_id=cliente.id %}">Platos</a>
+        <a href="{% url 'elegir_postres' cliente_id=cliente.id %}">Postres</a>
+        <a href="{% url 'elegir_mesa_dulce_premium' cliente_id=cliente.id %}">Mesa Dulce Premium</a>
+        <a href="{% url 'elegir_extras' cliente_id=cliente.id %}">Extras</a>
+        <a href="{% url 'elegir_shows' cliente_id=cliente.id %}">Shows</a>
+        <a href="{% url 'elegir_recepcion' cliente_id=cliente.id %}">Recepción</a>
+        <a href="{% url 'elegir_fin_de_fiesta' cliente_id=cliente.id %}">Fin de Fiesta</a>
+    </div>
+</nav>
+
+<h1>Personal</h1>
+<form method="post">
+    {% csrf_token %}
+
+    {# Lógica para obtener las horas del Barman antes del bucle principal, evitando la duplicación. #}
+    {% with barman_horas_existentes="" %}
+        {% for p in personal_existente.values %}
+            {% if p.nombre == "Barman" %}
+                {% with barman_horas_existentes=p.horas %}{% endwith %}
+            {% endif %}
+        {% endfor %}
+    {% endwith %}
+
+    {% for opcion in opciones_personal %}
+        {# El div de cada opción depende de tus estilos externos (estilo.css) para el layout flex/block. #}
+        <div style="margin-bottom: 15px;">
+            <label>
+                <input type="checkbox" name="personal" value="{{ opcion.0 }}"
+                    {% for p in personal_existente.values %}
+                        {% if p.nombre == opcion.0 %}checked{% endif %}
+                    {% endfor %}>
+                {{ opcion.1 }}
+            </label>
+
+            <input type="number"
+                   name="cantidad_{{ opcion.0 }}"
+                   min="1"
+                   placeholder="Cantidad"
+                   style="width: 80px; margin-left: 10px;"
+                   {% for p in personal_existente.values %}
+                       {% if p.nombre == opcion.0 %}
+                           value="{{ p.cantidad }}"
+                       {% endif %}
+                   {% endfor %}
+                   {% if not personal_existente %}value="1"{% endif %}>
+
+            {% if opcion.0 == "Barman" %}
+                {# Lógica CORREGIDA: Sin bucles anidados #}
+                <select name="horas_barman" id="horasBarman" style="margin-left: 10px; display:none;">
+                    <option value="">-- Horas --</option>
+                    {% for hr in opciones_horas_barman %}
+                        <option value="{{ hr.0 }}" 
+                                {% if hr.0 == barman_horas_existentes %}selected{% endif %}>
+                            {{ hr.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Continuar</button>
+</form>
+
+<script>
+// Función del Navbar Toggle (necesaria para el menú móvil)
+window.toggleMenu = function() {
+    const navLinks = document.getElementById('navLinks');
+    navLinks.classList.toggle('active');
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Lógica del Barman (Horas desplegable)
+    const checkBarman = document.querySelector('input[value="Barman"]');
+    const horasBarman = document.getElementById("horasBarman");
+    if (checkBarman && horasBarman) {
+        const toggleHoras = () => {
+            // Muestra/oculta las horas
+            horasBarman.style.display = checkBarman.checked ? "inline-block" : "none";
+            if (!checkBarman.checked) horasBarman.value = "";
+        };
+        checkBarman.addEventListener("change", toggleHoras);
+        toggleHoras();
+    }
+});
+</script>
+</body>
+</html>

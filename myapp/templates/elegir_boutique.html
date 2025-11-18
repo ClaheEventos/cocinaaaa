@@ -1,14 +1,11 @@
 {% load static %}
-
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>barra</title>
+    <meta charset="UTF-8">
+    <title>Boutique – {{ cliente.nombre }}</title>
     <link rel="stylesheet" href="{% static 'estilo.css' %}">
-    <link rel="stylesheet" href="{% static 'navbar.css' %}">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+    <link rel="stylesheet" href="{% static 'navbar.css' %}"></head>
 <body>
 <nav class="navbar">
     <button class="menu-toggle" onclick="toggleMenu()">☰</button>
@@ -30,32 +27,26 @@
         <a href="{% url 'elegir_fin_de_fiesta' cliente_id=cliente.id %}">Fin de Fiesta</a>
     </div>
 </nav
-  <h1> </h1>
-  <h1>Elejir barra</h1>
+<h1></h1>
+<h1>Boutique</h1>
 <form method="POST">
     {% csrf_token %}
-    <label>Duración:</label><br>
 
-    {% for opcion in barra_tragos_posibles %}
-        <div style="margin-bottom: 10px;">
-            <label>
-                <input type="radio" name="barra_tragos" value="{{ opcion }}"
-                       {% if duracion_previa == opcion %}checked{% endif %}>
-                {{ opcion }}
-            </label>
-        </div>
+    {% for opcion in OPCIONES_BOUTIQUE %}
+        <label style="display:block; margin:8px 0;">
+            <input type="checkbox"
+                   name="boutique"
+                   value="{{ opcion }}"
+                   {% if opcion in seleccionados %}checked{% endif %}>
+            {{ opcion }}
+        </label>
     {% endfor %}
 
-    <hr style="width: 100%; border: 1px solid #ffeb3b; margin: 20px 0;" />
-    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
-        <button type="button" onclick="history.back()">← Atrás</button>
-        <button type="submit">Guardar</button>
-    </div>
+    <br><br>
+
+    <button type="button" onclick="history.back()">← Atrás</button>
+    <button type="submit">Continuar</button>
 </form>
-<script>
-    function toggleMenu() {
-        document.getElementById('navLinks').classList.toggle('show');
-    }
-</script>
+
 </body>
 </html>

@@ -46,6 +46,29 @@
       No se indicó la cantidad
     {% endif %}
   </p>
+
+  <!-- ✅ NUEVO: Personal -->
+  <h3>👥 Personal Asignado</h3>
+  <ul>
+    {% for personal in personal_items %}
+      <li>
+        {{ personal.nombre }} - Cantidad: {{ personal.cantidad }}
+        {% if personal.horas %} ({{ personal.horas }} horas){% endif %}
+      </li>
+    {% empty %}
+      <li>No se asignó personal</li>
+    {% endfor %}
+  </ul>
+
+  <!-- ✅ NUEVO: Boutique -->
+  <h3>💄 Boutique</h3>
+  <ul>
+    {% for item in boutique_items %}
+      <li>{{ item.nombre }}</li>
+    {% empty %}
+      <li>No se seleccionaron servicios de boutique</li>
+    {% endfor %}
+  </ul>
   
   <hr>
 
@@ -133,7 +156,9 @@
   
   <h3>🎤 Shows</h3>
   <ul>{% for show in shows %}<li>{{ show.nombre }}</li>{% empty %}<li>No hay shows</li>{% endfor %}</ul>
-</div>{% if mostrar_botones %}
+</div>
+
+{% if mostrar_botones %}
   <a href="{% url 'editar_cliente' cliente_id=cliente.id %}">
     <button type="button" style="
       background: linear-gradient(135deg, #ffd700, #ffa500);
@@ -171,17 +196,45 @@ function descargarPDF() {
       .replace(/[^\w\-]/g, "");
     
     const opciones = {
-      margin: 0.5,
+      margin: [0.5, 0.5, 0.5, 0.5],
       filename: `resumen_evento_${nombreCliente}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        letterRendering: true,
+        logging: false
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'letter', 
+        orientation: 'portrait'
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }  // ✅ Evita cortes en el medio
     };
     
     window.scrollTo(0, 0);
-    setTimeout(() => { html2pdf().set(opciones).from(elemento).save(); }, 200);
+    setTimeout(() => { 
+      html2pdf().set(opciones).from(elemento).save(); 
+    }, 300);
 }
 </script>
+
+<style>
+  /* ✅ Estilos para evitar cortes en el PDF */
+  @media print {
+    h2, h3 {
+      page-break-after: avoid;
+      page-break-inside: avoid;
+    }
+    ul, ol {
+      page-break-inside: avoid;
+    }
+    li {
+      page-break-inside: avoid;
+    }
+  }
+</style>
 
 </body>
 </html>

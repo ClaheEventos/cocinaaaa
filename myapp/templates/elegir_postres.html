@@ -16,6 +16,8 @@
     <div class="nav-links" id="navLinks">
         <a href="{% url 'agregar_telefonos' cliente_id=cliente.id %}">Teléfonos</a>
         <a href="{% url 'elegir_plan' cliente_id=cliente.id %}">Plan</a>
+        <a href="{% url 'elegir_personal' cliente_id=cliente.id %}">Personal</a>
+        <a href="{% url 'elegir_boutique' cliente_id=cliente.id %}">Boutique</a> <!-- NUEVO LINK -->
         <a href="{% url 'elegir_bebidas' cliente_id=cliente.id %}">Bebidas</a>
         <a href="{% url 'elegir_islas' cliente_id=cliente.id %}">Islas</a>
         <a href="{% url 'elegir_islas_premium' cliente_id=cliente.id %}">Islas Premium</a>
@@ -28,9 +30,8 @@
         <a href="{% url 'elegir_recepcion' cliente_id=cliente.id %}">Recepción</a>
         <a href="{% url 'elegir_fin_de_fiesta' cliente_id=cliente.id %}">Fin de Fiesta</a>
     </div>
-</nav>
-
-    <h1>Postres</h1>
+</nav
+<h1>Postres</h1><h1>Postres</h1>
 
     <form method="post">
         {% csrf_token %}

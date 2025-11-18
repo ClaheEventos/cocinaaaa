@@ -4,7 +4,7 @@ from .forms import ClienteForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Cliente, Isla,IslaPremium, Postre, MesaDulcePremium, Extra, Show, EleccionFinDeFiesta,Cantidades, EleccionRecepcion,Telefono, BarraTragos
+from .models import Cliente, Isla,IslaPremium, Postre, MesaDulcePremium, Extra, Show, EleccionFinDeFiesta,Cantidades, EleccionRecepcion,Telefono, BarraTragos,Boutique
 from functools import wraps
 
 def acceso_intermedio_o_superusuario(view_func):
@@ -115,7 +115,7 @@ def elegir_plan(request, cliente_id):
         Plan.objects.create(cliente=cliente, nombre=plan_seleccionado)
 
         # Redirigir al siguiente paso (bebidas)
-        return redirect('elegir_bebidas', cliente_id=cliente.id)
+        return redirect('elegir_personal', cliente_id=cliente.id)
 
     # Obtener el plan previamente seleccionado
     plan_elegido = cliente.plan.values_list('nombre', flat=True).first()  # solo uno
@@ -332,6 +332,8 @@ ISLAS_PREMIUM_POSIBLES = [
     "Isla de Mar",
     "Isla Teen",
     "Isla de Pastas",
+    "Isla dulce eleccion de tartas",
+    
 ]
 
 @login_required(login_url='/ode/login/')
@@ -421,13 +423,22 @@ PLATOS_PRINCIPALES = [
             "acompanamiento": ["Papas españolas", "Papas rústicas", "Arroz primavera"]
         }
     },
+    {
+        "nombre": "Lomo",
+        "opciones": {
+            "salsa": ["Pimienta", "Mostaza"]
+        }
+    },
+
 ]
 
 PLATOS_INFANTILES = [
     {"nombre": "Milanesa ", "opciones": {"acompanamiento": ["Papas fritas", "Puré"]}},
-    {"nombre": "Cheeseburger con papas fritas",  "opciones": None},
-    {"nombre": "Medallón de pollo crispy con papas fritas", "opciones": None},
-    {"nombre": "Nuggets con papas fritas", "opciones": None},
+    {"nombre": "Cheeseburger",  "opciones": {"acompanamiento": ["Papas fritas", "Puré"]}},
+    {"nombre": "Medallón de pollo crispy", "opciones": {"acompanamiento": ["Papas fritas", "Puré"]}},
+    {"nombre": "Nuggets", "opciones": {"acompanamiento": ["Papas fritas", "Puré"]}},
+    {"nombre": "Hamburguesa", "opciones": {"acompanamiento": ["Papas fritas", "Puré"]}},
+
 ]
 @login_required(login_url='/ode/login/')
 @login_required
@@ -529,7 +540,8 @@ def elegir_platos(request, cliente_id):
 POSTRES_POSIBLES = [
     "Copa helada",
     "Coctel de frutas",
-    "Flan con crema o dulce de leche",
+    "Flan con crema ",
+    "Flan con dulce de leche",
     "Brownie con helado",
     "Shot de mousse",
     "Durazno con crema",
@@ -622,6 +634,9 @@ EXTRAS_POSIBLES = [
     "Ambientación mesa candy",
     "Reportaje (1 hora)",
     "Detalle especial",
+    "Sillon adicional",
+    "Extras plataforma",
+
 
 ]
 @login_required(login_url='/ode/login/')
@@ -849,7 +864,6 @@ def elegir_recepcion(request, cliente_id):
     RECEPCION_CATEGORIAS = {
         "Recepción básica": [
             "Empanadas de copetín",
-
             "Figazas de pollo al verdeo",
             "Mini pebetes surtidos",
             "Arrollados de pionono",
@@ -883,8 +897,10 @@ def elegir_recepcion(request, cliente_id):
         ]
     }
 
-    # Recuperar la categoría anterior (si existe)
+    # Todos los ítems ya elegidos por el cliente
     elecciones_previas = list(cliente.recepcion.values_list('item', flat=True))
+
+    # Detectar categoría completa si aplica (opcional)
     categoria_seleccionada = None
     for cat, items in RECEPCION_CATEGORIAS.items():
         if all(i in elecciones_previas for i in items):
@@ -910,11 +926,15 @@ def elegir_recepcion(request, cliente_id):
 
         return redirect("elegir_fin_de_fiesta", cliente_id=cliente.id)
 
-    return render(request, "elegir_recepcion.html", {
-        "cliente": cliente,
-        "categorias": RECEPCION_CATEGORIAS,
-        "categoria_seleccionada": categoria_seleccionada,
+    return render(request, 'elegir_recepcion.html', {
+        'cliente': cliente,
+        'categorias': RECEPCION_CATEGORIAS,
+        'categoria_seleccionada': categoria_seleccionada,
+        'elecciones_previas': elecciones_previas  # <-- PASAMOS los items ya seleccionados
     })
+
+
+
 
 @login_required(login_url='/ode/login/')
 def resumen_cliente(request, cliente_id):
@@ -950,6 +970,10 @@ def resumen_cliente(request, cliente_id):
     vinos = cliente.vinos.all() if hasattr(cliente, 'vinos') else []
     choperas = cliente.choperas.all() if hasattr(cliente, 'choperas') else []
 
+    # ✅ NUEVOS: Personal y Boutique
+    personal_items = cliente.personal.all() if hasattr(cliente, 'personal') else []
+    boutique_items = cliente.boutique.all() if hasattr(cliente, 'boutique') else []
+
     return render(request, 'resumen_cliente.html', {
         'cliente': cliente,
         'plan': plan,
@@ -970,9 +994,10 @@ def resumen_cliente(request, cliente_id):
         'telefono': telefono,
         'num_adultos': num_adultos,
         'num_ninos': num_ninos,
-        'mostrar_botones': mostrar_botones,  # pasamos al template
+        'personal_items': personal_items,  # ✅ NUEVO
+        'boutique_items': boutique_items,  # ✅ NUEVO
+        'mostrar_botones': mostrar_botones,
     })
-    
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import Cliente, PerfilUsuario
@@ -1075,4 +1100,127 @@ def elegir_barra_tragos(request, cliente_id):
         'cliente': cliente,
         'barra_tragos_posibles': BARRA_TRAGOS_POSIBLES,
         'duracion_previa': duracion_previa,
+    })
+
+
+# ===== Opciones del Personal =====
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Cliente, Personal
+
+# ===== Opciones del Personal =====
+# ===== Opciones del Personal =====
+OPCIONES_PERSONAL = [
+    ("DJ", "DJ"),
+    ("Ayudante", "Ayudante"),
+    ("Cocina", "Cocina"),
+    ("Bacha", "Bacha"),
+    ("Mozos", "Mozos"),
+    ("Cuida Coches", "Cuida Coches"),
+    ("Cuida Niños", "Cuida Niños"),
+    ("Barman", "Barman"),
+]
+
+OPCIONES_HORAS_BARMAN = [
+    (3, "3 horas"),
+    (6, "6 horas"),
+]
+
+
+
+# ===== Opciones del Personal =====
+OPCIONES_PERSONAL = [
+    ("DJ", "DJ"),
+    ("Ayudante", "Ayudante"),
+    ("Cocina", "Cocina"),
+    ("Bacha", "Bacha"),
+    ("Mozos", "Mozos"),
+    ("Cuida Coches", "Cuida Coches"),
+    ("Cuida Niños", "Cuida Niños"),
+    ("Barman", "Barman"),
+]
+
+OPCIONES_HORAS_BARMAN = [
+    (3, "3 horas"),
+    (6, "6 horas"),
+]
+
+
+@login_required(login_url='/ode/login/')
+@acceso_intermedio_o_superusuario
+def elegir_personal(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+
+    if request.method == "POST":
+        # Borrar personal previo
+        cliente.personal.all().delete()
+
+        seleccionados = request.POST.getlist("personal")
+
+        for opcion in seleccionados:
+            cantidad = request.POST.get(f"cantidad_{opcion}", 1)
+            try:
+                cantidad = int(cantidad)
+            except:
+                cantidad = 1
+
+            horas = None
+            if opcion == "Barman":
+                horas = request.POST.get("horas_barman")
+                horas = int(horas) if horas else None
+
+            Personal.objects.create(
+                cliente=cliente,
+                nombre=opcion,
+                cantidad=cantidad,
+                horas=horas
+            )
+
+        return redirect("elegir_boutique", cliente_id=cliente.id)
+
+    # Diccionario para el template: clave=nombre, valor=objeto Personal
+    personal_existente = {p.nombre: p for p in cliente.personal.all()}
+
+    contexto = {
+        "cliente": cliente,
+        "opciones_personal": OPCIONES_PERSONAL,
+        "opciones_horas_barman": OPCIONES_HORAS_BARMAN,
+        "personal_existente": personal_existente,
+    }
+
+    return render(request, "elegir_personal.html", contexto)
+
+
+@login_required(login_url='/ode/login/')
+@acceso_intermedio_o_superusuario
+def elegir_boutique(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+
+    OPCIONES_BOUTIQUE = [
+        "Peinado",
+        "Maquillaje",
+        "Uñas",
+        "Vestido",
+        "Pantalla"
+    ]
+
+    if request.method == "POST":
+        seleccionados = request.POST.getlist("boutique")
+
+        # Borrar anteriores
+        cliente.boutique.all().delete()
+
+        # Guardar nuevos
+        for nombre in seleccionados:
+            Boutique.objects.create(cliente=cliente, nombre=nombre)
+
+        # ▶AHORA VA A BEBIDAS
+        return redirect("elegir_bebidas", cliente_id=cliente.id)
+
+    # Para marcar ya elegidos
+    ya_elegidos = cliente.boutique.values_list("nombre", flat=True)
+
+    return render(request, "elegir_boutique.html", {
+        "cliente": cliente,
+        "OPCIONES_BOUTIQUE": OPCIONES_BOUTIQUE,
+        "seleccionados": ya_elegidos,
     })
