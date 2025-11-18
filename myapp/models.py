@@ -5,6 +5,7 @@ class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     fecha_evento = models.DateField()
     horario_evento = models.TimeField(null=True, blank=True)  # Nuevo campo
+    horario_cierre = models.TimeField(null=True, blank=True)   # Nuevo campo (cierre)
     salon = models.CharField(max_length=100)
     tipo_evento = models.CharField(max_length=100)  # Campo ya existente
 

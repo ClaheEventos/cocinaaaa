@@ -206,19 +206,25 @@ from datetime import datetime
 
 from datetime import datetime
 from .models import Cliente
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from datetime import datetime
+from .models import Cliente
 
 @login_required(login_url='/ode/login/')
 def crear_cliente(request):
+
     # Lista de salones
     salon = [
         "Varela", "Varela II", "Berazategui", "Monteverde", "París",
         "Dream's", "Melody", "Luxor", "Bernal", "Sol Fest",
         "Clahe", "Onix", "Auguri", "Dominico II", "Gala", "Sarandí II",
         "Garufa", "Lomas", "Temperley", "Clahe Escalada", "Piñeyro",
-        "Monte Grande", "Arcoiris" ,"Varela III", "Green House",
+        "Monte Grande", "Arcoiris", "Varela III", "Green House",
     ]
 
-    # Nueva lista de tipos de evento
+    # Tipos de evento
     tipos_evento = [
         "Cumpleaños de 15", "Boda", "Aniversario", "Bautismo",
         "Comunión", "Evento Empresarial", "Fiesta de Egresados",
@@ -226,37 +232,47 @@ def crear_cliente(request):
     ]
 
     if request.method == 'POST':
+
         dni = request.POST.get('dni')
         nombre = request.POST.get('nombre')
         fecha_evento_str = request.POST.get('fecha_evento')
         horario_evento_str = request.POST.get('horario')
-        tipo_evento_seleccionado = request.POST.get('tipo_evento') # Nuevo nombre de variable para POST
+        horario_cierre_str = request.POST.get('horario_cierre')  # NUEVO
+        tipo_evento_seleccionado = request.POST.get('tipo_evento')
         salon_seleccionado = request.POST.get('salon')
 
-        # --- Contexto Base para Respuestas de Error ---
+        # Contexto si hay errores
         error_context = {
             'dni': dni,
             'nombre': nombre,
             'fecha_evento': fecha_evento_str,
             'horario': horario_evento_str,
+            'horario_cierre': horario_cierre_str,
             'salon': salon,
-            'tipos_evento': tipos_evento, # ¡Agregado aquí!
+            'tipos_evento': tipos_evento,
             'salon_seleccionado': salon_seleccionado,
-            'tipo_evento_seleccionado': tipo_evento_seleccionado, # Para mantener la selección
+            'tipo_evento_seleccionado': tipo_evento_seleccionado,
         }
 
-        # Convertir fecha a objeto date
+        # Convertir fecha
         try:
             fecha_evento = datetime.strptime(fecha_evento_str, "%Y-%m-%d").date()
-        except ValueError:
+        except:
             messages.error(request, "Formato de fecha inválido. Usa AAAA-MM-DD.")
             return render(request, 'crear.html', error_context)
 
-        # Convertir horario a objeto time
+        # Convertir horario inicio
         try:
             horario_evento = datetime.strptime(horario_evento_str, "%H:%M").time()
-        except ValueError:
-            messages.error(request, "Formato de horario inválido. Usa HH:MM en 24h.")
+        except:
+            messages.error(request, "Formato de horario inválido (inicio). Usa HH:MM.")
+            return render(request, 'crear.html', error_context)
+
+        # Convertir horario cierre
+        try:
+            horario_cierre = datetime.strptime(horario_cierre_str, "%H:%M").time()
+        except:
+            messages.error(request, "Formato de horario inválido (cierre). Usa HH:MM.")
             return render(request, 'crear.html', error_context)
 
         # Guardar cliente
@@ -265,18 +281,20 @@ def crear_cliente(request):
             nombre=nombre,
             fecha_evento=fecha_evento,
             horario_evento=horario_evento,
-            tipo_evento=tipo_evento_seleccionado, # Usar el valor del formulario
+            horario_cierre=horario_cierre,
+            tipo_evento=tipo_evento_seleccionado,
             salon=salon_seleccionado,
         )
         cliente.save()
 
         return redirect('agregar_telefonos', cliente_id=cliente.id)
 
-    # --- Solicitud GET inicial ---
+    # GET request
     return render(request, 'crear.html', {
         'salon': salon,
-        'tipos_evento': tipos_evento # Se pasa la lista para la carga inicial del formulario
+        'tipos_evento': tipos_evento,
     })
+
 @login_required(login_url='/ode/login/')
 def agregar_telefonos(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)

@@ -6,10 +6,7 @@
     <title>Crear Cliente</title>
     <link rel="stylesheet" href="{% static 'estilo.css' %}">
     <link rel="stylesheet" href="{% static 'especial.css' %}">
-
-    <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
@@ -23,8 +20,6 @@
             border: 1px solid #ccc;
             font-size: 1rem;
         }
-
-       
     </style>
 </head>
 <body>
@@ -49,6 +44,7 @@
         <label for="fecha_evento_alt">Fecha del Evento:</label>
         <input type="hidden" name="fecha_evento" id="fecha_evento" value="{{ fecha_evento|default:'' }}">
         <input type="text" id="fecha_evento_alt" value=""> 
+
         <label for="tipo_evento">Tipo de Evento:</label>
         <select name="tipo_evento" id="tipo_evento" required>
             <option value="">--Seleccioná un tipo--</option>
@@ -60,8 +56,12 @@
             {% endfor %}
         </select>
 
-        <label for="horario">Horario:</label>
+        <label for="horario">Horario (Inicio):</label>
         <input type="time" name="horario" id="horario" value="{{ horario|default:'' }}">
+
+        <!-- NUEVO CAMPO: HORARIO DE CIERRE -->
+        <label for="horario_cierre">Horario de Cierre:</label>
+        <input type="time" name="horario_cierre" id="horario_cierre" value="{{ horario_cierre|default:'' }}">
 
         <label for="salon">Salón:</label>
         <select name="salon" id="salon" required>
@@ -87,17 +87,16 @@
         var fp = flatpickr("#fecha_evento_alt", {
             locale: "es",
             altInput: true,
-            altFormat: "d/m/Y", // visible para usuario
-            dateFormat: "Y-m-d", // lo que Django necesita
+            altFormat: "d/m/Y",
+            dateFormat: "Y-m-d",
             allowInput: true,
             altInputClass: "flatpickr-input",
             onChange: function(selectedDates, dateStr, instance) {
-                // Sincroniza el valor con el campo oculto
                 document.getElementById("fecha_evento").value = dateStr;
             }
         });
 
-        // Restaurar el valor de la fecha al recargar la página por error
+        // Restaurar fecha al recargar por error
         var fechaOculta = document.getElementById("fecha_evento").value;
         if (fechaOculta) {
              fp.setDate(fechaOculta, true);
